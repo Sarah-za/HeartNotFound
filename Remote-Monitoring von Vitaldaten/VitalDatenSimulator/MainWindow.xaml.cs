@@ -24,6 +24,7 @@ namespace VitalDatenSimulator
     {
         private readonly Random rnd = new Random(); 
         private readonly DispatcherTimer timer = new DispatcherTimer();
+        private GraphWindow graphWindow;
 
         public string StationID { get; set; }
         private double _heartRate;
@@ -73,6 +74,11 @@ namespace VitalDatenSimulator
             BloodPressure = ChangeValue(BloodPressure, 70, 240);
             RespRate = ChangeValue(RespRate, 8, 30);
             SpO2 = ChangeValue(SpO2, 80, 99);
+
+            if (graphWindow != null && graphWindow.IsVisible)
+            {
+                graphWindow.UpdateValues(HeartRate, Temperature, BloodPressure, RespRate, SpO2);
+            }
         }
 
         private double ChangeValue(double value, double min, double max)
@@ -113,6 +119,19 @@ namespace VitalDatenSimulator
 
 
             MessageBox.Show(msg, "Current Vital Parameters", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void OpenGraph(object sender, RoutedEventArgs e)
+        {
+            if (graphWindow == null || !graphWindow.IsVisible)
+            {
+                graphWindow = new GraphWindow();
+                graphWindow.Show();
+            }
+            else
+            {
+                graphWindow.Focus();
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
