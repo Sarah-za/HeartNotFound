@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:VitalDatenSimulator"
         mc:Ignorable="d"
         Title="MainWindow" 
-        Height="900" Width="450"
+        Height="940" Width="450"
         Background="#f5f5f5">
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -90,22 +90,24 @@
             <Button Content="Show Current Values"
                         Background="#4a708b" Foreground="White"
                         FontWeight="Bold" Padding="10" Width="200"
-                        Click="ShowValues"/>
+                        Click="ShowValues" Margin="0,0,0,5"/>
 
             <Button Content="Open Graph Window"
                         Background="#00695c" Foreground="White"
-                        FontWeight="Bold" Padding="10" Margin="10,0"
-                        Click="OpenGraph"/>
+                        FontWeight="Bold" Padding="10" Width="200"
+                        Click="OpenGraph" Margin="0,0,0,5"/>
+
+            <GroupBox Header="Critical Simulations" Margin="0,15,0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
+                    <Button Content="Tachycardia" Width="100" Margin="5" Click="SimulateTachycardia"/>
+                    <Button Content="Hypoxia" Width="100" Margin="5" Click="SimulateHypoxia"/>
+                    <Button Content="Fever" Width="100" Margin="5" Click="SimulateFever"/>
+                </StackPanel>
+            </GroupBox>
 
         </StackPanel>
 
-        <GroupBox Header="Critical Simulations" Margin="0,15,0,0">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="5">
-                <Button Content="Tachykardie" Width="130" Margin="5" Click="Button_Click"/>
-                <Button Content="Hypoxie" Width="130" Margin="5" Click="Button_Click"/>
-                <Button Content="Fieber" Width="130" Margin="5" Click="Button_Click"/>
-            </StackPanel>
-        </GroupBox>
+
 
     </Grid>
 </Window>
