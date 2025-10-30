@@ -32,7 +32,7 @@ namespace VitalDatenSimulator
         private double _bloodPressure;
         private double _respRate;
         private double _spO2;
-        private double _changePercent = 2.0;
+        private double _changePercent = 1.0;
         private double _updateIntervall = 1000;
         private bool isRunning = false;
 
@@ -83,13 +83,28 @@ namespace VitalDatenSimulator
 
         private double ChangeValue(double value, double min, double max)
         {
-            double factor = 1 + ((rnd.NextDouble() * 2 - 1) * (ChangePercent / 100.0));
-            double newValue = value * factor;
+            double range = max - min;
+            double delta = range * (ChangePercent / 100.0);
 
-            if (newValue < min) { newValue = min; }
-            if (newValue > max) { newValue = max; }
+            if (rnd.Next(2) == 0)
+                value += delta;
+            else
+                value -= delta;
+
+            if (value < min)
+                value = min;
+            if (value > max)
+                value = max;
+
+            return value;
+
+           // double factor = 1 + ((rnd.NextDouble() * 2 - 1) * (ChangePercent / 100.0));
+            //double newValue = value * factor;
+
+           // if (newValue < min) { newValue = min; }
+            //if (newValue > max) { newValue = max; }
           
-            return newValue;
+            //return newValue;
         }
 
         private void ToggleSimulation(object sender, RoutedEventArgs e)
@@ -136,5 +151,10 @@ namespace VitalDatenSimulator
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

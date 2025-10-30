@@ -6,9 +6,12 @@
         xmlns:local="clr-namespace:VitalDatenSimulator"
         mc:Ignorable="d"
         Title="VitalParameter Graphs" 
-        Height="600" Width="900">
+        Height="700" Width="900"
+        Background="#f5f5f5">
+    
     <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -18,11 +21,69 @@
                    FontWeight="Bold"
                    Foreground="#2b3e50"
                    HorizontalAlignment="Center"
-                   Margin="0,0,0,10"/>
+                   Margin="0,0,0,15"/>
+        
+        <!--Legende-->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" 
+                    VerticalAlignment="Center" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal" Margin="10,0">
+                <Rectangle Width="20" Height="10" Fill="Yellow" Margin="5,0"/>
+                <TextBlock Text="Heart Rate" VerticalAlignment="Center"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="10,0">
+                <Rectangle Width="20" Height="10" Fill="Orange" Margin="5,0"/>
+                <TextBlock Text="Temperature" VerticalAlignment="Center"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="10,0">
+                <Rectangle Width="20" Height="10" Fill="Red" Margin="5,0"/>
+                <TextBlock Text="Blood Pressure" VerticalAlignment="Center"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="10,0">
+                <Rectangle Width="20" Height="10" Fill="Blue" Margin="5,0"/>
+                <TextBlock Text="Respiratory Rate" VerticalAlignment="Center"/>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="10,0">
+                <Rectangle Width="20" Height="10" Fill="Purple" Margin="5,0"/>
+                <TextBlock Text="Oxygen Saturation" VerticalAlignment="Center"/>
+            </StackPanel>
+            
+        </StackPanel>
+        
+        <!--Graphen der Vitalparameter-->
 
-        <Border Grid.Row="1" Background="White" BorderBrush="#ccc" BorderThickness="1" CornerRadius="8">
-            <Canvas x:Name="GraphCanvas"/>
-        </Border>
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" BorderBrush="#ccc" BorderThickness="0,1,0,1">
+                <Canvas x:Name="Canvas_HeartRate" Background="White"/>
+            </Border>
+
+            <Border Grid.Row="1" BorderBrush="#ccc" BorderThickness="0,1,0,1">
+                <Canvas x:Name="Canvas_Temperature" Background="White"/>
+            </Border>
+
+            <Border Grid.Row="2" BorderBrush="#ccc" BorderThickness="0,1,0,1">
+                <Canvas x:Name="Canvas_BloodPressure" Background="White"/>
+            </Border>
+
+            <Border Grid.Row="3" BorderBrush="#ccc" BorderThickness="0,1,0,1">
+                <Canvas x:Name="Canvas_RespRate" Background="White"/>
+            </Border>
+
+            <Border Grid.Row="4" BorderBrush="#ccc" BorderThickness="0,1,0,1">
+                <Canvas x:Name="Canvas_SpO2" Background="White"/>
+            </Border>
+        </Grid>
 
     </Grid>
 </Window>
