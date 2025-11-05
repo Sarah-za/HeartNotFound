@@ -36,15 +36,20 @@ namespace VitalDatenSimulator
         private double _updateIntervall = 1000;
         private bool isRunning = false;
 
-        private double minHR = 40, maxHR = 160;
-        private double minTemp = 34, maxTemp = 42;
-        private double minBP = 70, maxBP = 240;
-        private double minRR = 8, maxRR = 30;
-        private double minSpO2 = 80, maxSpO2 = 99; 
+        private double minHR = 40, maxHR = 160, stdHR = 75;
+        private double minTemp = 34, maxTemp = 42, stdTemp = 37.0;
+        private double minBP = 70, maxBP = 240 , stdBP = 120;
+        private double minRR = 8, maxRR = 30, stdRespRate = 16;
+        private double minSpO2 = 80, maxSpO2 = 99, stdSpO2 = 98; 
 
         private bool simulateTachy = false;
         private bool simulateHypoxia = false;
         private bool simulateFever = false;
+        private bool simulateHypertonie = false;
+        private bool simualteBradypnoe = false;
+
+        private bool reset = false;
+        private bool crit = false;
 
         public string SimulationButtonText => isRunning ? "Stop Simulation" : "Start Simulation";
 
@@ -67,11 +72,11 @@ namespace VitalDatenSimulator
             DataContext = this;
 
             StationID = $"Staion ID: {rnd.Next(1000, 9999)}";
-            HeartRate = 75;
-            BloodPressure = 120;
-            RespRate = 16;
-            Temperature = 37.0;
-            SpO2 = 98;
+            HeartRate = stdHR;
+            BloodPressure = stdBP;
+            RespRate = stdRespRate;
+            Temperature = stdTemp;
+            SpO2 = stdSpO2;
 
             timer.Interval = TimeSpan.FromMilliseconds(_updateIntervall);
             timer.Tick += Timer_Tick;
@@ -79,28 +84,60 @@ namespace VitalDatenSimulator
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (simulateTachy)
-                HeartRate = SimulateCriticalChange(HeartRate, minHR, maxHR, +5);
-            else
-                HeartRate = ChangeValue(HeartRate, minHR, maxHR);
+            if (reset)
+            {
+                HeartRate = MoveTowards(HeartRate, stdHR, 0.05);
+                Temperature = MoveTowards(Temperature, stdTemp, 0.05);
+                BloodPressure = MoveTowards(BloodPressure, stdBP, 0.05);
+                RespRate = MoveTowards(RespRate, stdRespRate, 0.05);
+                SpO2 = MoveTowards(SpO2, stdSpO2, 0.05);
 
-            if (simulateFever)
-                Temperature = SimulateCriticalChange(Temperature, minTemp, maxTemp, +0.5);
-            else
-                Temperature = ChangeValue(Temperature, minTemp, maxTemp);
+                if (Math.Abs(HeartRate - stdHR) < 0.5 &&
+                    Math.Abs(Temperature - stdTemp) < 0.05 &&
+                    Math.Abs(BloodPressure - stdBP) < 0.5 &&
+                    Math.Abs(RespRate - stdRespRate) < 0.2 &&
+                    Math.Abs(SpO2 - stdSpO2) < 0.5)
+                {
+                    reset = false;
+                }
 
-            BloodPressure = ChangeValue(BloodPressure, minBP, maxBP);
-            RespRate = ChangeValue(RespRate, minRR, maxRR);
+            }
 
-            if (simulateHypoxia)
-                SpO2 = SimulateCriticalChange(SpO2, minSpO2, maxSpO2, -3);
+
             else
-                SpO2 = ChangeValue(SpO2, minSpO2, maxSpO2);
+            {
+                if (simulateTachy)
+                    HeartRate = SimulateCriticalChange(HeartRate, minHR, maxHR, +3);
+                else
+                    HeartRate = ChangeValue(HeartRate, minHR, maxHR);
+
+                if (simulateFever)
+                    Temperature = SimulateCriticalChange(Temperature, minTemp, maxTemp, +0.25);
+                else
+                    Temperature = ChangeValue(Temperature, minTemp, maxTemp);
+
+                if (simulateHypertonie)
+                    BloodPressure = SimulateCriticalChange(BloodPressure, minBP, maxBP, +2);
+                else
+                    BloodPressure = ChangeValue(BloodPressure, minBP, maxBP);
+
+                if (simualteBradypnoe)
+                    RespRate = SimulateCriticalChange(RespRate, minRR, maxRR, -0.25);
+                else
+                    RespRate = ChangeValue(RespRate, minRR, maxRR);
+
+                if (simulateHypoxia)
+                    SpO2 = SimulateCriticalChange(SpO2, minSpO2, maxSpO2, -1.5);
+                else
+                    SpO2 = ChangeValue(SpO2, minSpO2, maxSpO2);
+
+            }
 
             if (graphWindow != null && graphWindow.IsVisible)
             {
                 graphWindow.UpdateValues(HeartRate, Temperature, BloodPressure, RespRate, SpO2);
             }
+
         }
 
         private double ChangeValue(double value, double min, double max)
@@ -131,6 +168,12 @@ namespace VitalDatenSimulator
             return value;
         }
 
+        private double MoveTowards(double current, double target, double fraction)
+        {
+            double diff = target - current;
+            return current + diff * fraction;
+        }
+
         private void ToggleSimulation(object sender, RoutedEventArgs e)
         {
             if (isRunning)
@@ -140,6 +183,9 @@ namespace VitalDatenSimulator
                 simulateFever = false;
                 simulateHypoxia = false;
                 simulateTachy = false;
+                simualteBradypnoe = false;
+                simulateHypertonie = false;
+                reset = false;
             }
             else
             {
@@ -176,6 +222,48 @@ namespace VitalDatenSimulator
             }
         }
 
+        private void Reset(object sender, RoutedEventArgs e)
+        {
+            if (!isRunning)
+                return;
+
+            simulateFever = false;
+            simulateHypoxia = false;
+            simulateTachy = false;
+            simualteBradypnoe= false;
+            simulateHypertonie= false;
+            crit = false;
+            reset = true;
+        }
+
+        private void AlmostDead(object sender, RoutedEventArgs e)
+        {
+            if(!isRunning) 
+                return;
+
+            if (!crit)
+            {
+                simulateFever = true;
+                simulateHypoxia = true;
+                simulateTachy = true;
+                simualteBradypnoe = true;
+                simulateHypertonie = true;
+                reset = false;
+                crit = true;
+            }
+            else
+            {
+                simulateFever = false;
+                simulateHypoxia = false;
+                simulateTachy = false;
+                simualteBradypnoe = false;
+                simulateHypertonie = false;
+                reset = false;
+                crit = false;
+            }
+
+        }
+
         private void SimulateTachycardia(object sender , RoutedEventArgs e)
         {
             if (!timer.IsEnabled) 
@@ -185,38 +273,55 @@ namespace VitalDatenSimulator
                 simulateTachy = true;
             else
                 simulateTachy = false;
-            simulateFever = false;
-            simulateHypoxia = false;
-
+            crit = false;
         }
 
         private void SimulateFever(object sender, RoutedEventArgs e)
         {
             if (!timer.IsEnabled)
                 return;
-            simulateTachy = false;
 
             if (!simulateFever)
                 simulateFever = true;
             else
                 simulateFever = false;
-
-            simulateHypoxia = false;
-
+            crit = false;
         }
 
         private void SimulateHypoxia(object sender, RoutedEventArgs e)
         {
             if (!timer.IsEnabled)
                 return;
-            simulateTachy = false;
-            simulateFever = false;
 
             if(!simulateHypoxia)
                 simulateHypoxia = true;
             else
                 simulateHypoxia= false;
+            crit = false;
+        }
 
+        private void SimulateHypertonie(object sender, RoutedEventArgs e)
+        {
+            if (!timer.IsEnabled) 
+                return;
+
+            if(!simulateHypertonie)
+                simulateHypertonie = true;
+            else
+                simulateHypertonie = false;
+            crit = false;
+        }
+
+        private void SimulateBradypnoe(object sender, RoutedEventArgs e)
+        {
+            if (!timer.IsEnabled) 
+                return;
+
+            if(!simualteBradypnoe)
+                simualteBradypnoe = true;
+            else
+                simualteBradypnoe= false;
+            crit = false;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
