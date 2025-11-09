@@ -25,6 +25,7 @@ namespace VitalDatenSimulator
         private readonly Random rnd = new Random(); 
         private readonly DispatcherTimer timer = new DispatcherTimer();
         private GraphWindow graphWindow;
+        private VitalMqttPublisher mqttPublisher;
 
         public string StationID { get; set; }
         private double _heartRate;
@@ -69,9 +70,11 @@ namespace VitalDatenSimulator
         public MainWindow()
         {
             InitializeComponent();
+            mqttPublisher = new VitalMqttPublisher();
+            mqttPublisher.Connect();
             DataContext = this;
 
-            StationID = $"Staion ID: {rnd.Next(1000, 9999)}";
+            StationID = $"Station ID: {rnd.Next(1000, 9999)}";
             HeartRate = stdHR;
             BloodPressure = stdBP;
             RespRate = stdRespRate;
@@ -136,6 +139,12 @@ namespace VitalDatenSimulator
             if (graphWindow != null && graphWindow.IsVisible)
             {
                 graphWindow.UpdateValues(HeartRate, Temperature, BloodPressure, RespRate, SpO2);
+            }
+
+            if (mqttPublisher != null && mqttPublisher.IsConnected)
+            {
+                string id = StationID.Replace("Station ID:", "").Trim();
+                mqttPublisher.PublishVitalData(id, HeartRate, Temperature, BloodPressure, RespRate, SpO2);
             }
 
         }
@@ -330,6 +339,14 @@ namespace VitalDatenSimulator
         private void Button_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            
+            base.OnClosed(e);
+            if (mqttPublisher != null && mqttPublisher.IsConnected)
+                mqttPublisher.Disconnect();
         }
     }
 }
