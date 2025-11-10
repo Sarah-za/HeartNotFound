@@ -70,11 +70,27 @@ namespace VitalDatenSimulator
         public MainWindow()
         {
             InitializeComponent();
-            mqttPublisher = new VitalMqttPublisher();
-            mqttPublisher.Connect();
+           // StationID = $"Station ID: {rnd.Next(1000, 9999)}";
+
             DataContext = this;
 
-            StationID = $"Station ID: {rnd.Next(1000, 9999)}";
+            var inputDialog = new InputDialog();
+            bool? result = inputDialog.ShowDialog();
+
+            if (result == true && !string.IsNullOrWhiteSpace(inputDialog.EnteredID))
+            {
+                StationID = $"Station ID: {inputDialog.EnteredID}";
+            }
+            else
+            {
+                StationID = $"Station ID: {rnd.Next(1000, 9999)}";
+            }
+
+
+            mqttPublisher = new VitalMqttPublisher();
+            mqttPublisher.Connect();
+
+
             HeartRate = stdHR;
             BloodPressure = stdBP;
             RespRate = stdRespRate;
