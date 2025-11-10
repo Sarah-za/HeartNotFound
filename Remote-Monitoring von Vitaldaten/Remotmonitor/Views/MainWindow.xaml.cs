@@ -62,7 +62,7 @@ public partial class MainWindow : Window
         }
     }
 
-    // Button: Suchen (wie Enter)
+    // (früherer) Button: Suchen – existiert ggf. nicht mehr, kann bleiben
     private void SearchSelectFirst_Click(object sender, RoutedEventArgs e)
     {
         SearchBox_KeyDown(SearchBox,
@@ -70,7 +70,7 @@ public partial class MainWindow : Window
             { RoutedEvent = Keyboard.KeyDownEvent });
     }
 
-    // Button: Leeren
+    // (früherer) Button: Leeren – existiert ggf. nicht mehr, kann bleiben
     private void SearchClear_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
@@ -78,5 +78,22 @@ public partial class MainWindow : Window
         Keyboard.Focus(SearchBox);
         SearchBox.SelectAll();
     }
-}
 
+    // NEU: Doppelklick auf Karte -> Detailfenster
+    private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Nur bei Doppelklick reagieren
+        if (e.ClickCount != 2) return;
+
+        if ((sender as FrameworkElement)?.DataContext is VitalSample v)
+        {
+            var win = new PatientDetailWindow
+            {
+                Owner = this,
+                DataContext = v
+            };
+            e.Handled = true; // verhindert, dass ScrollViewer/ListView weiterreagiert
+            win.ShowDialog();
+        }
+    }
+}
