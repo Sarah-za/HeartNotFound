@@ -163,7 +163,7 @@ public partial class MainViewModel : ObservableObject
                (v.MonitorId?.IndexOf(q, System.StringComparison.OrdinalIgnoreCase) >= 0);
     }
 
-    // 👉 Normales Refresh bei User-Aktionen (OK, passiert selten)
+    //  Normales Refresh bei User-Aktionen (OK, passiert selten)
     partial void OnSearchTextChanged(string? value) => VitalsView.Refresh();
     partial void OnSelectedRoomChanged(string value) => VitalsView.Refresh();
 

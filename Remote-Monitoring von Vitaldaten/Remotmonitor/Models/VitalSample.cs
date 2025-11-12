@@ -30,8 +30,6 @@ public partial class VitalSample : ObservableObject
     [ObservableProperty] private int spo2;    // Sauerstoffsättigung (%)
     [ObservableProperty] private int rr;      // Atemfrequenz (/min)
     [ObservableProperty] private double temp; // Temperatur (°C)
-
-    // Blutdruck
     [ObservableProperty] private int sys;     // Systolisch (mmHg)
     [ObservableProperty] private int dia;     // Diastolisch (mmHg)
 
@@ -41,7 +39,7 @@ public partial class VitalSample : ObservableObject
     // Anzeigename: "P-0001 (m, 62)"
     public string DisplayName => $"{PatientId} ({Gender}, {Age})";
 
-    // 🔔 Abgeleitete Alarmfarbe
+    // Abgeleitete Alarmfarbe
     public SolidColorBrush AlarmColor => GetAlarmBrush();
 
     private SolidColorBrush GetAlarmBrush()
@@ -93,4 +91,4 @@ public partial class VitalSample : ObservableObject
 
     partial void OnRoomChanged(string value) => OnPropertyChanged(nameof(RoomBed));
     partial void OnBedChanged(int value) => OnPropertyChanged(nameof(RoomBed));
-}
+}

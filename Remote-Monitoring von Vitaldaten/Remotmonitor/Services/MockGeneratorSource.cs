@@ -29,7 +29,6 @@ public sealed class MockGeneratorSource : IDataSource
         _patients = Enumerable.Range(1, 16).Select(i => $"P-{i:0000}").ToArray();
 
         // Verteilung der Patienten auf Zimmer (nur Zimmernummern!)
-        // -> Du kannst die Häufigkeit je Zimmer frei wählen.
         string[] roomsSequence =
         {
             "101","101","101","101","101", // 5 Patienten in Zimmer 101  => Betten 1..5
@@ -128,4 +127,4 @@ public sealed class MockGeneratorSource : IDataSource
         _timer.Dispose();
         return ValueTask.CompletedTask;
     }
-}
+}
