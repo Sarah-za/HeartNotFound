@@ -1,0 +1,62 @@
+﻿<Window x:Class="AdministrationApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AdministrationApp.MainWindow"
+        Height="550" Width="850">
+
+    <Grid Margin="10">
+
+        <!-- 🧭 TabControl mit zwei Tabs -->
+        <TabControl>
+
+            <!-- TAB 1: Patientenverwaltung -->
+            <TabItem Header="👨‍⚕️ Patienten">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Eingabeformular -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBox x:Name="txtVorname" Width="150" Margin="0,0,10,0" Text="Vorname"/>
+                        <TextBox x:Name="txtNachname" Width="150" Margin="0,0,10,0" Text="Nachname"/>
+                        <Button Content="➕ Patient hinzufügen" Width="160" Click="BtnAdd_Click"/>
+                        <Button Content="🗑 Patient löschen" Width="140" Margin="10,0,0,0" Click="BtnDelete_Click"/>
+                    </StackPanel>
+
+                    <!-- Patientenliste -->
+                    <DataGrid x:Name="dgPatienten"
+                              Grid.Row="1"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Patient-ID" Binding="{Binding Id}" Width="Auto"/>
+                            <DataGridTextColumn Header="Vorname" Binding="{Binding Vorname}" Width="*"/>
+                            <DataGridTextColumn Header="Nachname" Binding="{Binding Nachname}" Width="*"/>
+                            <DataGridTextColumn Header="Monitor-ID" Binding="{Binding MonitorId}" Width="Auto"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 2: Monitore -->
+            <TabItem Header="🖥️ Monitore">
+                <Grid Margin="10">
+                    <DataGrid x:Name="dgMonitore"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Monitor-ID" Binding="{Binding Id}" Width="Auto"/>
+                            <DataGridTextColumn Header="Modell" Binding="{Binding Modell}" Width="*"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
+                            <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</Window>
