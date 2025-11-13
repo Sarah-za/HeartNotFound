@@ -8,8 +8,15 @@ namespace AdministrationApp
 {
     public class Monitor
     {
-        public int Moid { get; set; }
         public string Modell { get; set; }
+
+        public string Status { get; set; } // "🟢 Frei" oder "🔴 Belegt"
+
+        public string PatientName { get; set; }
+        public int Moid { get; set; }
+
         public bool IstBelegt { get; set; } = false;
+
     }
 }
+        
