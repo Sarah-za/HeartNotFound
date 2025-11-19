@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalDatenSimulator", "Vita
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalDatenReceiver", "VitalDatenReceiver\VitalDatenReceiver.csproj", "{9F5066F0-5C79-464B-9B34-9C06985D04F4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalDatenSim", "VitalDatenSim\VitalDatenSim.csproj", "{60680B17-1E73-4B17-B95D-FA646ACB97F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{9F5066F0-5C79-464B-9B34-9C06985D04F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F5066F0-5C79-464B-9B34-9C06985D04F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F5066F0-5C79-464B-9B34-9C06985D04F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

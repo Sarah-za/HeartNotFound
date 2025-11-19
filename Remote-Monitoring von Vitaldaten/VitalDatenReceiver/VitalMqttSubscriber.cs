@@ -25,7 +25,7 @@ namespace VitalDatenReceiver
         private MqttFactory myFactory;
 
         private string stationId = "";
-        private List<(DateTime Time, string station, string parameter, string value)> dataList = new List<(DateTime,string, string, string)>();
+        private List<(DateTime Time, string station, string parameter, string value)> dataList = new List<(DateTime, string, string, string)>();
 
         public VitalMqttSubscriber()
         {
@@ -53,7 +53,7 @@ namespace VitalDatenReceiver
                 await myClient.SubscribeAsync("25pms02/+/temperature");
                 await myClient.SubscribeAsync("25pms02/+/bloodpressure");
                 await myClient.SubscribeAsync("25pms02/+/resprate");
-                await myClient.SubscribeAsync("25pms02/+/sp02");
+                await myClient.SubscribeAsync("25pms02/+/spo2");
 
                 Console.WriteLine("Abonniert: 25pms02/<StationID>/(alleVitalparameter)\n");
             }
@@ -75,7 +75,7 @@ namespace VitalDatenReceiver
                 string station = parts[1];
                 string parameter = parts[2];
                 dataList.Add((DateTime.Now, station, parameter, payload));
-                Console.WriteLine($"[{DateTime.Now:T}] Station {station, -6} {parameter,-12}: {payload}");
+                Console.WriteLine($"[{DateTime.Now:T}] Station {station,-6} {parameter,-12}: {payload}");
             }
 
             await Task.CompletedTask;
@@ -111,7 +111,7 @@ namespace VitalDatenReceiver
                 return;
             }
 
-            foreach (var entry  in dataList)
+            foreach (var entry in dataList)
             {
                 Console.WriteLine($"{entry.Time:T} {entry.parameter,-12} {entry.value,6}");
             }
