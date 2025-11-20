@@ -35,6 +35,7 @@ namespace VitalDatenSimulator
         private double _spO2;
         private double _changePercent = 1.0;
         private double _updateIntervall = 1000;
+
         private bool isRunning = false;
 
         private double minHR = 40, maxHR = 160, stdHR = 75;
