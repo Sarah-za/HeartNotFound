@@ -10,7 +10,8 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        IDataSource source = new MockGeneratorSource();
+        //IDataSource source = new MockGeneratorSource(); //Mock Daten
+        IDataSource source = new MqttDataSource();
 
         var vm = new MainViewModel(source);
         var window = new MainWindow { DataContext = vm };
