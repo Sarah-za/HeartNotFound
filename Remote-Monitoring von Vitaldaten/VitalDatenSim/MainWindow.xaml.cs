@@ -47,9 +47,9 @@ namespace VitalDatenSim
         private bool isRunning = false;
 
         private double minHR = 40, maxHR = 160, stdHR = 75;
-        private double minTemp = 34, maxTemp = 42, stdTemp = 37.0;
+        private double minTemp = 34, maxTemp = 42, stdTemp = 36.7;
         private double minBP = 70, maxBP = 240, stdBP = 120;
-        private double minRR = 8, maxRR = 30, stdRespRate = 16;
+        private double minRR = 6, maxRR = 30, stdRespRate = 16;
         private double minSpO2 = 80, maxSpO2 = 99, stdSpO2 = 98;
 
         private bool simulateTachy = false;

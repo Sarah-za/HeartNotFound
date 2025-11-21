@@ -104,9 +104,9 @@ namespace Remotmonitor.Services
             string topic = e.ApplicationMessage.Topic;
             string payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
-            // -------------------------------------------
-            // 1) ALLE retained messages IGNORIEREN
-            // -------------------------------------------
+           
+            // Alle vorherigen Nachrichten ignorieren, sodass keine Patienten mit alten Daten erstellt werden
+            
             if (e.ApplicationMessage.Retain)
             {
                 Console.WriteLine("[MQTT] Ignoring retained: " + topic);
@@ -120,9 +120,9 @@ namespace Remotmonitor.Services
             string stationId = parts[1];
             string parameter = parts[2];
 
-            // -------------------------------------------
-            // 2) Patient nur erzeugen, wenn neue MQTT-Daten kommen
-            // -------------------------------------------
+
+            // Patient nur erzeugen, wenn neue MQTT-Daten kommen
+
             if (!_stationToPatient.ContainsKey(stationId))
             {
                 string pid = $"P-{_nextPatientNr:0000}";
@@ -154,9 +154,9 @@ namespace Remotmonitor.Services
 
             var b = _buffer[stationId];
 
-            // -------------------------------------------
-            // 3) Timestamp NUR akzeptieren, wenn NACH Programmstart
-            // -------------------------------------------
+
+            // 3) Timestamp nur akzeptieren, wenn nach Programmstart
+
             if (!b.Ts.HasValue)
             {
                 var now = DateTime.UtcNow;
@@ -170,9 +170,9 @@ namespace Remotmonitor.Services
                 b.Ts = now;
             }
 
-            // -------------------------------------------
-            // 4) Werte eintragen
-            // -------------------------------------------
+
+            // Vitlwerte die von dem Simulator kommen eintragen
+
             try
             {
                 switch (parameter)
@@ -192,9 +192,9 @@ namespace Remotmonitor.Services
             // Noch nicht alle Werte angekommen
             if (!b.Complete) return Task.CompletedTask;
 
-            // -------------------------------------------
-            // 5) Fertigen VitalSample erzeugen
-            // -------------------------------------------
+
+            // Fertigen VitalSample erzeugen, restliche daten werden zufällig erzeugt wie bei Mockdaten
+
             var (gender2, age2) = _demo[patientId];
 
             var sample = new VitalSample
@@ -215,12 +215,11 @@ namespace Remotmonitor.Services
                 Rr = (int)b.Rr.Value,
                 Temp = b.Temp.Value,
                 Sys = (int)b.Sys.Value,
-                Dia = (int)(b.Sys.Value - 60),
+                Dia = (int)(b.Sys.Value - 50),
             };
 
-            // -------------------------------------------
-            // 6) An MainViewModel senden
-            // -------------------------------------------
+            // An MainViewModel senden
+
             OnSample?.Invoke(sample);
 
             // Buffer zurücksetzen
