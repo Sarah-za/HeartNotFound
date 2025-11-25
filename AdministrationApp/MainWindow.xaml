@@ -102,8 +102,6 @@
             </Setter>
         </Style>
 
-        <!-- Converter für Status-Kugel -->
-        <local:StatusToBrushConverter x:Key="StatusToBrushConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -155,7 +153,6 @@
                             </Grid>
                         </Border>
                     </TabItem>
-
                     <!-- Monitore Tab -->
                     <TabItem Header="🖥️ Monitore">
                         <Border Style="{StaticResource CardPanel}">
@@ -178,35 +175,44 @@
                                     <Button Grid.Column="1" Content="➕ Monitor hinzufügen" Click="BtnAddMonitor_Click" Style="{StaticResource PrimaryButton}" Background="{StaticResource PrimaryButtonBg}"/>
                                     <Button Grid.Column="2" Content="🗑 Monitor löschen" Click="BtnDeleteMonitor_Click" Style="{StaticResource PrimaryButton}" Background="{StaticResource AccentButtonBg}"/>
                                 </Grid>
-
                                 <!-- DataGrid Monitore -->
-                                <DataGrid x:Name="dgMonitore" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+                                <DataGrid x:Name="dgMonitore" Grid.Row="1" AutoGenerateColumns="False" 
+                                                    IsReadOnly="True" SelectionMode="Single">
+
+                                    <!-- ✔ RowStyle ganz oben (richtige Position) -->
+                                    <DataGrid.RowStyle>
+                                        <Style TargetType="DataGridRow">
+                                            <Setter Property="Background" Value="White" />
+
+                                            <Style.Triggers>
+                                                <!-- 🟢 Frei -->
+                                                <DataTrigger Binding="{Binding Status}" Value="🟢 Frei">
+                                                    <Setter Property="Background" Value="#B3FFD9"/>
+                                                </DataTrigger>
+
+                                                <!-- 🔴 Belegt -->
+                                                <DataTrigger Binding="{Binding Status}" Value="🔴 Belegt">
+                                                    <Setter Property="Background" Value="#FFB3B3"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.RowStyle>
+
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Monitor-ID" Binding="{Binding MonitorId}" Width="Auto"/>
                                         <DataGridTextColumn Header="Modell" Binding="{Binding Modell}" Width="*"/>
                                         <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="*"/>
 
-                                        <!-- Status-Spalte mit Kugel -->
-                                        <DataGridTemplateColumn Header="Status" Width="120">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                        <Ellipse Width="12" Height="12" Margin="0,0,5,0">
-                                                            <Ellipse.Fill>
-                                                                <Binding Path="Status" Converter="{StaticResource StatusToBrushConverter}"/>
-                                                            </Ellipse.Fill>
-                                                        </Ellipse>
-                                                        <TextBlock Text="{Binding Status}"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-
+                                        <!-- Status-Spalte -->
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
+
                             </Grid>
                         </Border>
                     </TabItem>
+
+
 
                 </TabControl>
             </StackPanel>
