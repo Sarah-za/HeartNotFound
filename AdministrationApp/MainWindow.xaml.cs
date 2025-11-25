@@ -169,9 +169,13 @@ namespace AdministrationApp
 
             var conn = new NpgsqlConnection(connString);
             conn.Open();
-            var cmd = new NpgsqlCommand("INSERT INTO monitors (model) VALUES (@m)", conn);
-            cmd.Parameters.AddWithValue("@m", modell);
-            cmd.ExecuteNonQuery();
+            var cmdInsert = new NpgsqlCommand(@"
+            INSERT INTO monitors (moid, model)
+            VALUES ((SELECT COALESCE(MAX(moid),0)+1 FROM monitors), @m)
+            RETURNING moid;", conn);
+
+            cmdInsert.Parameters.AddWithValue("@m", modell);
+            cmdInsert.ExecuteNonQuery();
 
             txtModell.Clear();
             AktualisiereAnzeige();
@@ -202,5 +206,4 @@ namespace AdministrationApp
             AktualisiereAnzeige();
         }
     }
-
 }
