@@ -10,7 +10,6 @@ using Remotmonitor.Services;
 using Windows.Foundation.Collections;
 using Windows.Security.Cryptography.Core;
 
-
 namespace Remotmonitor.Services
 {
     public class MqttDataSource : IDataSource
@@ -25,7 +24,7 @@ namespace Remotmonitor.Services
 
         public event Action<VitalSample>? OnSample;
 
-        // Zeitpunkt, ab dem wir Daten akzeptieren
+        // Nur Daten akzeptieren, die nach Start eintreffen
         private readonly DateTime _programStart = DateTime.UtcNow;
 
         private readonly Random _rng = new();
@@ -41,6 +40,10 @@ namespace Remotmonitor.Services
         private readonly Dictionary<string, int> _bed = new();
 
         private readonly Dictionary<string, PartialVital> _buffer = new();
+
+        // Thresholds & Patienteninstanzen persistieren zur Laufzeit
+        private readonly Dictionary<string, Threshold> _savedThresholds = new();
+        private readonly Dictionary<string, VitalSample> _patients = new();
 
         private int _nextPatientNr = 1;
 
@@ -104,9 +107,7 @@ namespace Remotmonitor.Services
             string topic = e.ApplicationMessage.Topic;
             string payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
-           
-            // Alle vorherigen Nachrichten ignorieren, sodass keine Patienten mit alten Daten erstellt werden
-            
+            // Retained ignorieren (keine alten Werte beim Start)
             if (e.ApplicationMessage.Retain)
             {
                 Console.WriteLine("[MQTT] Ignoring retained: " + topic);
@@ -120,22 +121,18 @@ namespace Remotmonitor.Services
             string stationId = parts[1];
             string parameter = parts[2];
 
-
-            // Patient nur erzeugen, wenn neue MQTT-Daten kommen
-
+            // Patient-ID für Station vergeben (noch ohne Objekt-Erzeugung)
             if (!_stationToPatient.ContainsKey(stationId))
             {
                 string pid = $"P-{_nextPatientNr:0000}";
                 _nextPatientNr++;
-
                 _stationToPatient[stationId] = pid;
 
-                // Demographie
+                // Demographie + Zimmer
                 string gender = _rng.NextDouble() < 0.5 ? "m" : "w";
                 int age = _rng.Next(18, 90);
                 _demo[pid] = (gender, age);
 
-                // Zimmer zufällig (Mock-ähnlich)
                 string[] rooms = { "101", "102", "103", "104" };
                 string room = rooms[_rng.Next(rooms.Length)];
                 int bed = _rng.Next(1, 5);
@@ -143,36 +140,30 @@ namespace Remotmonitor.Services
                 _room[pid] = room;
                 _bed[pid] = bed;
 
-                Console.WriteLine($"[MQTT] New patient created: {pid} from station {stationId}");
+                Console.WriteLine($"[MQTT] New patient id reserved: {pid} for station {stationId}");
             }
 
             string patientId = _stationToPatient[stationId];
 
-            // Buffer erstellen
+            // Buffer je Station
             if (!_buffer.ContainsKey(stationId))
                 _buffer[stationId] = new PartialVital();
 
             var b = _buffer[stationId];
 
-
-            // 3) Timestamp nur akzeptieren, wenn nach Programmstart
-
+            // Timestamp NUR setzen, wenn nach Programmbeginn
             if (!b.Ts.HasValue)
             {
                 var now = DateTime.UtcNow;
-
                 if (now < _programStart)
                 {
                     Console.WriteLine("[MQTT] Ignoring old message (before program start)");
                     return Task.CompletedTask;
                 }
-
                 b.Ts = now;
             }
 
-
-            // Vitlwerte die von dem Simulator kommen eintragen
-
+            // Werte eintragen
             try
             {
                 switch (parameter)
@@ -189,43 +180,48 @@ namespace Remotmonitor.Services
                 return Task.CompletedTask;
             }
 
-            // Noch nicht alle Werte angekommen
+            // Erst wenn vollständig: Patient ggf. erzeugen + UI updaten
             if (!b.Complete) return Task.CompletedTask;
 
-
-            // Fertigen VitalSample erzeugen, restliche daten werden zufällig erzeugt wie bei Mockdaten
-
-            var (gender2, age2) = _demo[patientId];
-
-            var sample = new VitalSample
+            // Patient existiert noch nicht? -> JETZT erzeugen (nach Start, mit vollständigem Set)
+            if (!_patients.ContainsKey(patientId))
             {
-                PatientId = patientId,
-                MonitorId = stationId,
+                var (gender2, age2) = _demo[patientId];
 
-                Gender = gender2,
-                Age = age2,
+                var sample = new VitalSample
+                {
+                    PatientId = patientId,
+                    MonitorId = stationId,
+                    Gender = gender2,
+                    Age = age2,
+                    Room = _room[patientId],
+                    Bed = _bed[patientId],
+                    Ts = b.Ts.Value,
+                    Limits = _savedThresholds.ContainsKey(patientId)
+                        ? _savedThresholds[patientId]
+                        : new Threshold()
+                };
 
-                Room = _room[patientId],
-                Bed = _bed[patientId],
+                _patients[patientId] = sample;
+                _savedThresholds[patientId] = sample.Limits;
 
-                Ts = b.Ts.Value,
+                Console.WriteLine($"[MQTT] Patient object created: {patientId}");
+            }
 
-                Hr = (int)b.Hr.Value,
-                Spo2 = (int)b.Spo2.Value,
-                Rr = (int)b.Rr.Value,
-                Temp = b.Temp.Value,
-                Sys = (int)b.Sys.Value,
-                Dia = (int)(b.Sys.Value - 50),
+            // Vorhandenes Objekt aktualisieren
+            var vitals = _patients[patientId];
+            vitals.Ts = b.Ts.Value;
+            vitals.Hr = (int)b.Hr.Value;
+            vitals.Spo2 = (int)b.Spo2.Value;
+            vitals.Rr = (int)b.Rr.Value;
+            vitals.Temp = b.Temp.Value;
+            vitals.Sys = (int)b.Sys.Value;
+            vitals.Dia = (int)(b.Sys.Value - 50);
 
-                //Schwellenwerte
-                Limits = new Threshold()
-            };
+            // UI updaten
+            OnSample?.Invoke(vitals);
 
-            // An MainViewModel senden
-
-            OnSample?.Invoke(sample);
-
-            // Buffer zurücksetzen
+            // Buffer für diese Station zurücksetzen (für das nächste Paket)
             _buffer[stationId] = new PartialVital();
 
             return Task.CompletedTask;

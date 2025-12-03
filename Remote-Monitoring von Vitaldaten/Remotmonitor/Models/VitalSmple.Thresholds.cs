@@ -9,49 +9,40 @@ namespace Remotmonitor.Models
 {
     public partial class VitalSample
     {
-        // Patientenspezifische Schwellwerte
+        // pro Patient zur Laufzeit
         public Threshold Limits { get; set; } = new Threshold();
 
-        /// <summary>
-        /// Berechnet den Alarmstatus anhand der individuellen Schwellenwerte.
-        /// </summary>
         public SolidColorBrush EvaluateAlarmBrush()
         {
             var t = Limits ?? new Threshold();
 
+            // Kritisch: ≤ criticalMin oder ≥ criticalMax
             bool critical =
-                Spo2 < t.Spo2CriticalMin || Spo2 > t.Spo2CriticalMax ||
-                Hr < t.HrCriticalMin || Hr > t.HrCriticalMax ||
-                Rr < t.RrCriticalMin || Rr > t.RrCriticalMax ||
-                Temp < t.TempCriticalMin || Temp > t.TempCriticalMax ||
-                Sys < t.SysCriticalMin || Sys > t.SysCriticalMax ||
-                Dia < t.DiaCriticalMin || Dia > t.DiaCriticalMax;
+                Spo2 <= t.Spo2CriticalMin || Spo2 >= t.Spo2CriticalMax ||
+                Hr <= t.HrCriticalMin || Hr >= t.HrCriticalMax ||
+                Rr <= t.RrCriticalMin || Rr >= t.RrCriticalMax ||
+                Temp <= t.TempCriticalMin || Temp >= t.TempCriticalMax ||
+                Sys <= t.SysCriticalMin || Sys >= t.SysCriticalMax ||
+                Dia <= t.DiaCriticalMin || Dia >= t.DiaCriticalMax;
 
-            if (critical)
-                return new SolidColorBrush(Colors.Red);
+            if (critical) return new SolidColorBrush(Colors.Red);
 
+            // Warnung: (zwischen critical und warning außerhalb der Normalzone)
             bool warning =
-                (Spo2 >= t.Spo2WarningMin && Spo2 <= t.Spo2WarningMax) ||
+                (Spo2 < t.Spo2WarningMin && Spo2 > t.Spo2CriticalMin) || (Spo2 > t.Spo2WarningMax && Spo2 < t.Spo2CriticalMax) ||
+                (Hr < t.HrWarningMin && Hr > t.HrCriticalMin) || (Hr > t.HrWarningMax && Hr < t.HrCriticalMax) ||
+                (Rr < t.RrWarningMin && Rr > t.RrCriticalMin) || (Rr > t.RrWarningMax && Rr < t.RrCriticalMax) ||
+                (Temp < t.TempWarningMin && Temp > t.TempCriticalMin) || (Temp > t.TempWarningMax && Temp < t.TempCriticalMax) ||
+                (Sys < t.SysWarningMin && Sys > t.SysCriticalMin) || (Sys > t.SysWarningMax && Sys < t.SysCriticalMax) ||
+                (Dia < t.DiaWarningMin && Dia > t.DiaCriticalMin) || (Dia > t.DiaWarningMax && Dia < t.DiaCriticalMax);
 
-                (Hr >= t.HrWarningMin && Hr <= t.HrWarningMax) ||
-                (Hr >= t.HrWarningUpperMin && Hr <= t.HrWarningUpperMax) ||
-
-                (Rr >= t.RrWarningMin && Rr <= t.RrWarningMax) ||
-                (Rr >= t.RrWarningUpperMin && Rr <= t.RrWarningUpperMax) ||
-
-                (Temp >= t.TempWarningLowMin && Temp <= t.TempWarningLowMax) ||
-                (Temp >= t.TempWarningHighMin && Temp <= t.TempWarningHighMax) ||
-
-                (Sys >= t.SysWarningLowMin && Sys <= t.SysWarningLowMax) ||
-                (Sys >= t.SysWarningHighMin && Sys <= t.SysWarningHighMax) ||
-
-                (Dia >= t.DiaWarningLowMin && Dia <= t.DiaWarningLowMax) ||
-                (Dia >= t.DiaWarningHighMin && Dia <= t.DiaWarningHighMax);
-
-            if (warning)
-                return new SolidColorBrush(Colors.Gold);
+            if (warning) return new SolidColorBrush(Colors.Gold);
 
             return new SolidColorBrush(Colors.Lime);
         }
+
+        // von außen aufrufbar (z. B. nach Threshold-Änderung)
+        public void RefreshAlarmColor() => OnPropertyChanged(nameof(AlarmColor));
     }
 }
+
