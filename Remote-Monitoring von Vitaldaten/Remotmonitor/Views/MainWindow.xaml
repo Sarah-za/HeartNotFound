@@ -178,6 +178,7 @@
                       ItemsSource="{Binding VitalsView}"
                       SelectionMode="Extended"
                       SelectionChanged="PatientList_SelectionChanged"
+                      MouseDoubleClick="PatientList_MouseDoubleClick"
                       Background="Black" Foreground="Lime" BorderBrush="Gray"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       VirtualizingPanel.IsVirtualizing="True"

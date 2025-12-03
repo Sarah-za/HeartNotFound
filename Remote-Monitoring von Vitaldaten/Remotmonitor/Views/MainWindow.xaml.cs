@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Remotmonitor.Models;
 using Remotmonitor.ViewModels;
+using Remotmonitor.Views; // ✅ hinzugefügt: für ThresholdWindow
 
 namespace Remotmonitor;
 
@@ -79,6 +80,7 @@ public partial class MainWindow : Window
         SearchBox.SelectAll();
     }
 
+
     // NEU: Doppelklick auf Karte -> Detailfenster
     private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -94,6 +96,26 @@ public partial class MainWindow : Window
             };
             e.Handled = true; // verhindert, dass ScrollViewer/ListView weiterreagiert
             win.ShowDialog();
+        }
+    }
+
+
+    private void PatientList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (PatientList.SelectedItem is not VitalSample patient)
+            return;
+
+        var win = new ThresholdWindow(patient)
+        {
+            Owner = this
+        };
+
+        bool? result = win.ShowDialog();
+
+        if (result == true)
+        {
+            // Nach Änderung Alarmfarbe neu berechnen
+            patient.EvaluateAlarmBrush();
         }
     }
 }

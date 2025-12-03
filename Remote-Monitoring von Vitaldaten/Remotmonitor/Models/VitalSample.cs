@@ -39,31 +39,8 @@ public partial class VitalSample : ObservableObject
     // Anzeigename: "P-0001 (m, 62)"
     public string DisplayName => $"{PatientId} ({Gender}, {Age})";
 
-    // Abgeleitete Alarmfarbe
-    public SolidColorBrush AlarmColor => GetAlarmBrush();
-
-    private SolidColorBrush GetAlarmBrush()
-    {
-        bool critical =
-            Spo2 < 90 ||
-            Hr < 40 || Hr > 130 ||
-            Rr < 8 || Rr > 25 ||
-            Temp < 35.5 || Temp > 38.5 ||
-            Sys > 180 || Sys < 80 || Dia > 110 || Dia < 50;
-
-        if (critical) return new SolidColorBrush(Colors.Red);
-
-        bool warning =
-            (Spo2 is >= 90 and <= 93) ||
-            (Hr is >= 40 and <= 49) || (Hr is >= 111 and <= 130) ||
-            (Rr is >= 8 and <= 9) || (Rr is >= 21 and <= 25) ||
-            (Temp is >= 35.5 and <= 35.9) || (Temp is >= 37.6 and <= 38.5) ||
-            (Sys is >= 140 and <= 180) || (Sys is >= 80 and <= 89) ||
-            (Dia is >= 90 and <= 110) || (Dia is >= 50 and <= 59);
-
-        if (warning) return new SolidColorBrush(Colors.Gold);
-        return new SolidColorBrush(Colors.Lime);
-    }
+    // Abgeleitete Alarmfarbe — jetzt mit individuellen Limits
+    public SolidColorBrush AlarmColor => EvaluateAlarmBrush();
 
     // Änderungen melden
     partial void OnTsChanged(System.DateTime value) => OnPropertyChanged(nameof(TsLocal));

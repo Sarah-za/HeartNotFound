@@ -216,6 +216,9 @@ namespace Remotmonitor.Services
                 Temp = b.Temp.Value,
                 Sys = (int)b.Sys.Value,
                 Dia = (int)(b.Sys.Value - 50),
+
+                //Schwellenwerte
+                Limits = new Threshold()
             };
 
             // An MainViewModel senden
