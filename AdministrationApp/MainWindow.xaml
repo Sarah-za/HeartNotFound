@@ -136,7 +136,7 @@
 
                                     <TextBox Grid.Column="0" x:Name="txtVorname" Style="{StaticResource RoundedTextBox}" />
                                     <TextBox Grid.Column="1" x:Name="txtNachname" Style="{StaticResource RoundedTextBox}" />
-                                    <ComboBox Grid.Column="2" x:Name="cbFreieMonitore" DisplayMemberPath="Modell" SelectedValuePath="MonitorId"/>
+                                    <ComboBox Grid.Column="2" x:Name="cbFreieMonitore" DisplayMemberPath="Modell" SelectedValuePath="Moid"/>
                                     <Button Grid.Column="3" Content="➕ Patient hinzufügen" Click="BtnAdd_Click" Style="{StaticResource PrimaryButton}" Background="{StaticResource PrimaryButtonBg}"/>
                                     <Button Grid.Column="4" Content="🗑 Patient löschen" Click="BtnDelete_Click" Style="{StaticResource PrimaryButton}" Background="{StaticResource AccentButtonBg}"/>
                                 </Grid>
@@ -147,7 +147,7 @@
                                         <DataGridTextColumn Header="Patient-ID" Binding="{Binding Id}" Width="Auto"/>
                                         <DataGridTextColumn Header="Vorname" Binding="{Binding Vorname}" Width="*"/>
                                         <DataGridTextColumn Header="Nachname" Binding="{Binding Nachname}" Width="*"/>
-                                        <DataGridTextColumn Header="Monitor-ID" Binding="{Binding MonitorId}" Width="Auto"/>
+                                        <!-- <DataGridTextColumn Header="Monitor-ID" Binding="{Binding Moid}" Width="Auto"/> -->
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
@@ -199,7 +199,7 @@
                                     </DataGrid.RowStyle>
 
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Monitor-ID" Binding="{Binding MonitorId}" Width="Auto"/>
+                                        <DataGridTextColumn Header="Monitor-ID" Binding="{Binding Moid}" Width="Auto"/>
                                         <DataGridTextColumn Header="Modell" Binding="{Binding Modell}" Width="*"/>
                                         <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="*"/>
 

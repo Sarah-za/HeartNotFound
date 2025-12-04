@@ -38,6 +38,7 @@ namespace AdministrationApp
             var conn = new NpgsqlConnection(connString);
             conn.Open();
 
+
             // --- Patienten laden ---
             var patientenListe = new List<Patient>();
             using (var cmdP = new NpgsqlCommand("SELECT pid, vorname, name FROM patients ORDER BY pid", conn))
@@ -175,6 +176,7 @@ namespace AdministrationApp
             RETURNING moid;", conn);
 
             cmdInsert.Parameters.AddWithValue("@m", modell);
+
             cmdInsert.ExecuteNonQuery();
 
             txtModell.Clear();
