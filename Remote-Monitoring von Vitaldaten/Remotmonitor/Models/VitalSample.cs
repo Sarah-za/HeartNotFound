@@ -34,6 +34,13 @@ public partial class VitalSample : ObservableObject
     [ObservableProperty] private int sys;     // Systolisch (mmHg)
     [ObservableProperty] private int dia;     // Diastolisch (mmHg)
 
+    public bool IsStale => (DateTime.UtcNow - ts).TotalMilliseconds > 30;
+
+    [ObservableProperty] private int stalePulse;
+
+    partial void OnStalePulseChanged(int value) => OnPropertyChanged(nameof(StalePulse));
+
+
     // Für die Tabellenanzeige "SYS/DIA"
     public string Bp => $"{Sys}/{Dia}";
 
@@ -120,19 +127,6 @@ public partial class VitalSample : ObservableObject
         }
     }
 
-    public void NotifyStaleChanged()
-    {
-        OnPropertyChanged(nameof(IsStale));
-    }
-
-    public bool IsStale
-    {
-        get
-        {   
-            // true, wenn letze Aktualisierung älter als 30s ist
-            return (DateTime.UtcNow - Ts).TotalSeconds > 30;
-        }
-    }
 
     // Abgeleitete Anzeigen aktualisieren
     partial void OnPatientIdChanged(string value) => OnPropertyChanged(nameof(DisplayName));

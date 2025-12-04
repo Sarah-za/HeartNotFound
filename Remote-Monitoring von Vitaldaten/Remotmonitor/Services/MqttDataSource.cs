@@ -103,6 +103,19 @@ namespace Remotmonitor.Services
             await client.SubscribeAsync("25pms02/+/spo2");
 
             Console.WriteLine("[MQTT] Subscribed.");
+
+            var _staleTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(5)
+            };
+
+            _staleTimer.Tick += (s, e) =>
+            {
+                foreach (var p in _patients.Values)
+                    p.StalePulse++;
+            };
+
+            _staleTimer.Start();
         }
 
         private Task OnMqttMessage(MqttApplicationMessageReceivedEventArgs e)
