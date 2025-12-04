@@ -38,11 +38,11 @@ namespace VitalDatenSimulator
 
         private bool isRunning = false;
 
-        private double minHR = 40, maxHR = 160, stdHR = 75;
+        private double minHR = 40, maxHR = 140, stdHR = 70;
         private double minTemp = 34, maxTemp = 42, stdTemp = 37.0;
-        private double minBP = 70, maxBP = 240 , stdBP = 120;
-        private double minRR = 8, maxRR = 30, stdRespRate = 16;
-        private double minSpO2 = 80, maxSpO2 = 99, stdSpO2 = 98; 
+        private double minBP = 80, maxBP = 240 , stdBP = 170;
+        private double minRR = 7, maxRR = 27, stdRespRate = 16;
+        private double minSpO2 = 85, maxSpO2 = 99, stdSpO2 = 98; 
 
         private bool simulateTachy = false;
         private bool simulateHypoxia = false;

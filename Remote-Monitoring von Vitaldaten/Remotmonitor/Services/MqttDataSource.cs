@@ -9,6 +9,7 @@ using Remotmonitor.Models;
 using Remotmonitor.Services;
 using Windows.Foundation.Collections;
 using Windows.Security.Cryptography.Core;
+using System.Windows.Threading;
 
 namespace Remotmonitor.Services
 {
@@ -46,6 +47,8 @@ namespace Remotmonitor.Services
         private readonly Dictionary<string, VitalSample> _patients = new();
 
         private int _nextPatientNr = 1;
+
+      
 
         private class PartialVital
         {
@@ -218,6 +221,7 @@ namespace Remotmonitor.Services
             vitals.Sys = (int)b.Sys.Value;
             vitals.Dia = (int)(b.Sys.Value - 50);
 
+
             // UI updaten
             OnSample?.Invoke(vitals);
 
@@ -232,5 +236,6 @@ namespace Remotmonitor.Services
             if (client != null && client.IsConnected)
                 await client.DisconnectAsync();
         }
+
     }
 }

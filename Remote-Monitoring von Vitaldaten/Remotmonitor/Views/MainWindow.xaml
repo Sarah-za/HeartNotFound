@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:m="clr-namespace:Remotmonitor.Models"
+        xmlns:local="clr-namespace:Remotmonitor.Converters"
         Title="Remote Monitor"
         Background="Black"
         FontFamily="Consolas"
@@ -14,6 +15,8 @@
 
     <!-- ===== Styles ===== -->
     <Window.Resources>
+        <local:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <Style TargetType="GridViewColumnHeader">
             <Setter Property="Foreground" Value="Cyan"/>
             <Setter Property="FontWeight" Value="Bold"/>
@@ -200,10 +203,20 @@
                         <GridViewColumn Header="RR" DisplayMemberBinding="{Binding Rr}" Width="60"/>
                         <GridViewColumn Header="Temp (°C)" DisplayMemberBinding="{Binding Temp}" Width="90"/>
                         <GridViewColumn Header="BP (mmHg)" DisplayMemberBinding="{Binding Bp}" Width="100"/>
-                        <GridViewColumn Header="Zeit (lokal)" Width="200">
+                        <GridViewColumn Header="EWS" DisplayMemberBinding="{Binding EWS}" Width="60"/>
+                        <GridViewColumn Header="Zeit (lokal)" Width="250">
                             <GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="TsLocal" StringFormat="{}{0:HH:mm:ss dd.MM.yyyy}"/>
                             </GridViewColumn.DisplayMemberBinding>
+                        </GridViewColumn>
+                        <GridViewColumn>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding IsStale, Converter={StaticResource BoolToStatusConverter}}"
+                                               Foreground="{Binding IsStale, Converter={StaticResource BoolToColorConverter}}"
+                                               HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                     </GridView>
                 </ListView.View>

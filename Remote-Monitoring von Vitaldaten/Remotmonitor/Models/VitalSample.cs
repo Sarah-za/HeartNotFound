@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Windows.Controls;
 using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -45,20 +46,92 @@ public partial class VitalSample : ObservableObject
     // Änderungen melden
     partial void OnTsChanged(System.DateTime value) => OnPropertyChanged(nameof(TsLocal));
 
-    partial void OnHrChanged(int value) => OnPropertyChanged(nameof(AlarmColor));
-    partial void OnSpo2Changed(int value) => OnPropertyChanged(nameof(AlarmColor));
-    partial void OnRrChanged(int value) => OnPropertyChanged(nameof(AlarmColor));
-    partial void OnTempChanged(double value) => OnPropertyChanged(nameof(AlarmColor));
+    partial void OnHrChanged(int value)
+    {
+        OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(EWS));
+    }
+    partial void OnSpo2Changed(int value)
+    {
+        OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(EWS));
+    }
+    partial void OnRrChanged(int value)
+    {
+        OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(EWS));
+    }
+    partial void OnTempChanged(double value)
+    {
+        OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(EWS));
+    }
 
     partial void OnSysChanged(int value)
     {
         OnPropertyChanged(nameof(AlarmColor));
         OnPropertyChanged(nameof(Bp));
+        OnPropertyChanged(nameof(EWS));
     }
     partial void OnDiaChanged(int value)
     {
         OnPropertyChanged(nameof(AlarmColor));
         OnPropertyChanged(nameof(Bp));
+        OnPropertyChanged(nameof(EWS));
+    }
+
+    public int EWS
+    {
+        get
+        {
+            int score = 0;
+
+            //HR
+            if (Hr <= 40) score += 2;
+            else if (Hr > 40 && Hr <= 50) score += 1;
+            else if (Hr >= 91 && Hr <= 110) score += 1;
+            else if (Hr > 110 && Hr <= 130) score += 2;
+            else if (Hr > 130) score += 3;
+
+            //Temp
+            if (Temp < 35.0) score += 3;
+            else if (Temp < 36.0 && Temp > 35.0) score += 1;
+            else if (Temp > 38.0 && Temp <= 39.0) score += 1;
+            else if (Temp > 39.0) score += 2;
+
+            //BP
+            if (Sys <= 90) score += 3;
+            else if (Sys > 90 && Sys <= 100) score += 2;
+            else if (Sys > 100 && Sys <= 110) score += 1;
+            else if (Sys >= 220) score += 3;
+
+            //RR
+            if (Rr < 8) score += 3;
+            else if (Rr >= 9 && Rr <= 11) score += 1;
+            else if (Rr > 21 && Rr <= 24) score += 2;
+            else if (Rr > 24) score += 3;
+
+            //Spo2
+            if (Spo2 <= 91) score += 3;
+            else if (Spo2 >= 92 && Spo2 <= 93) score += 2;
+            else if (Spo2 >= 94 && Spo2 <= 95) score += 1;
+
+            return score;
+        }
+    }
+
+    public void NotifyStaleChanged()
+    {
+        OnPropertyChanged(nameof(IsStale));
+    }
+
+    public bool IsStale
+    {
+        get
+        {   
+            // true, wenn letze Aktualisierung älter als 30s ist
+            return (DateTime.UtcNow - Ts).TotalSeconds > 30;
+        }
     }
 
     // Abgeleitete Anzeigen aktualisieren
