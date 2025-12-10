@@ -34,11 +34,24 @@ public partial class VitalSample : ObservableObject
     [ObservableProperty] private int sys;     // Systolisch (mmHg)
     [ObservableProperty] private int dia;     // Diastolisch (mmHg)
 
-    public bool IsStale => (DateTime.UtcNow - ts).TotalMilliseconds > 30;
+    public string Status => IsStale ? "Keine Daten" : "OK";
+
+    public bool IsStale
+    {
+        get
+        {
+            var age = (DateTime.UtcNow - Ts).TotalSeconds;
+            return age > 30;
+        }
+    }
 
     [ObservableProperty] private int stalePulse;
 
-    partial void OnStalePulseChanged(int value) => OnPropertyChanged(nameof(StalePulse));
+    partial void OnStalePulseChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsStale));
+        OnPropertyChanged(nameof(Status));
+    }
 
 
     // Für die Tabellenanzeige "SYS/DIA"
@@ -51,7 +64,12 @@ public partial class VitalSample : ObservableObject
     public SolidColorBrush AlarmColor => EvaluateAlarmBrush();
 
     // Änderungen melden
-    partial void OnTsChanged(System.DateTime value) => OnPropertyChanged(nameof(TsLocal));
+    partial void OnTsChanged(System.DateTime value)
+    {
+        OnPropertyChanged(nameof(TsLocal));
+        OnPropertyChanged(nameof(IsStale));
+        OnPropertyChanged(nameof(Status));
+    }
 
     partial void OnHrChanged(int value)
     {
@@ -124,6 +142,20 @@ public partial class VitalSample : ObservableObject
             else if (Spo2 >= 94 && Spo2 <= 95) score += 1;
 
             return score;
+        }
+    }
+
+    private bool _isActive;
+    public bool IsActive
+    {
+        get => _isActive;
+        set
+        {
+            if (_isActive != value)
+            {
+                _isActive = value;
+                OnPropertyChanged();
+            }
         }
     }
 

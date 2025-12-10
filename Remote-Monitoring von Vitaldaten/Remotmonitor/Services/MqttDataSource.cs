@@ -106,7 +106,7 @@ namespace Remotmonitor.Services
 
             var _staleTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromSeconds(5)
+                Interval = TimeSpan.FromSeconds(1)
             };
 
             _staleTimer.Tick += (s, e) =>

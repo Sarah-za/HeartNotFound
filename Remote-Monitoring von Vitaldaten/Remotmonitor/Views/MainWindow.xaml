@@ -204,17 +204,39 @@
                         <GridViewColumn Header="Temp (°C)" DisplayMemberBinding="{Binding Temp}" Width="90"/>
                         <GridViewColumn Header="BP (mmHg)" DisplayMemberBinding="{Binding Bp}" Width="100"/>
                         <GridViewColumn Header="EWS" DisplayMemberBinding="{Binding EWS}" Width="60"/>
+
+                        <GridViewColumn Header="Aktiv" Width="60">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsActive}"
+                      IsEnabled="False"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        
                         <GridViewColumn Header="Zeit (lokal)" Width="250">
                             <GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="TsLocal" StringFormat="{}{0:HH:mm:ss dd.MM.yyyy}"/>
                             </GridViewColumn.DisplayMemberBinding>
                         </GridViewColumn>
-                        <GridViewColumn>
+                        
+                        <GridViewColumn Header="Status" Width="180">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding IsStale, Converter={StaticResource BoolToStatusConverter}}"
-                                               Foreground="{Binding IsStale, Converter={StaticResource BoolToColorConverter}}"
-                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Status}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="Lime"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsStale}" Value="True">
+                                                        <Setter Property="Foreground" Value="Red"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

@@ -35,6 +35,12 @@ public partial class MainWindow : Window
         foreach (var removed in e.RemovedItems)
             if (removed is VitalSample s)
                 vm.Selected.Remove(s);
+
+        foreach (VitalSample p in e.AddedItems)
+            p.IsActive = true;
+
+        foreach (VitalSample p in e.RemovedItems)
+            p.IsActive = false;
     }
 
     // ENTER in Suchbox: ersten Treffer auswählen | ESC: löschen
