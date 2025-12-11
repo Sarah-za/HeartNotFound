@@ -41,7 +41,7 @@ namespace AdministrationApp
 
             // --- Patienten laden ---
             var patientenListe = new List<Patient>();
-            using (var cmdP = new NpgsqlCommand("SELECT pid, vorname, name FROM patients ORDER BY pid", conn))
+            using (var cmdP = new NpgsqlCommand("SELECT p.pid, p.vorname, p.name,\r\n       COALESCE(m.model, '-') AS monitor\r\nFROM patients p\r\nLEFT JOIN belegung b ON p.pid = b.pid\r\nLEFT JOIN monitors m ON b.moid = m.moid\r\nORDER BY p.pid\r\n", conn))
             using (var drP = cmdP.ExecuteReader())
             {
                 while (drP.Read())
@@ -50,7 +50,8 @@ namespace AdministrationApp
                     {
                         Id = drP.GetInt32(0),
                         Vorname = drP.GetString(1),
-                        Nachname = drP.GetString(2)
+                        Nachname = drP.GetString(2),
+                        MonitorName = drP.GetString(3)
                     });
                 }
             }
@@ -103,11 +104,11 @@ namespace AdministrationApp
             }
 
             Monitor monitor = cbFreieMonitore.SelectedItem as Monitor;
-            if (monitor == null)
+            /*if (monitor == null)
             {
                 MessageBox.Show("Bitte einen freien Monitor auswählen!");
                 return;
-            }
+            }*/
 
             var conn = new NpgsqlConnection(connString);
             conn.Open();
@@ -122,10 +123,13 @@ namespace AdministrationApp
             int newPid = (int)cmdInsert.ExecuteScalar();
 
             // Monitor zuweisen
-            var cmdBel = new NpgsqlCommand("INSERT INTO belegung (moid, pid) VALUES (@m, @p)", conn);
-            cmdBel.Parameters.AddWithValue("@m", monitor.Moid);
-            cmdBel.Parameters.AddWithValue("@p", newPid);
-            cmdBel.ExecuteNonQuery();
+            if (monitor != null)
+            {
+                var cmdBel = new NpgsqlCommand("INSERT INTO belegung (moid, pid) VALUES (@m, @p)", conn);
+                cmdBel.Parameters.AddWithValue("@m", monitor.Moid);
+                cmdBel.Parameters.AddWithValue("@p", newPid);
+                cmdBel.ExecuteNonQuery();
+            }
 
             txtVorname.Clear();
             txtNachname.Clear();
@@ -182,10 +186,10 @@ namespace AdministrationApp
             txtModell.Clear();
             AktualisiereAnzeige();
         }
-
         // 🗑 MONITOR LÖSCHEN
         private void BtnDeleteMonitor_Click(object sender, RoutedEventArgs e)
         {
+            // 1) Ausgewählten Monitor holen
             Monitor m = dgMonitore.SelectedItem as Monitor;
             if (m == null)
             {
@@ -193,19 +197,68 @@ namespace AdministrationApp
                 return;
             }
 
-            if (m.IstBelegt)
+            // **⚠️ Der Monitor wird gelöscht – Patient muss vorher zugewiesen werden, wenn gewollt**
+
+            var conn = new NpgsqlConnection(connString);
+            conn.Open();
+
+            // 2) Falls Monitor einem Patienten zugeordnet war → Belegung entfernen
+            using (var cmdBel = new NpgsqlCommand("DELETE FROM belegung WHERE moid=@m", conn))
             {
-                MessageBox.Show("Dieser Monitor ist belegt und kann nicht gelöscht werden!");
+                cmdBel.Parameters.AddWithValue("@m", m.Moid);
+                cmdBel.ExecuteNonQuery();
+            }
+
+            // 3) Monitor selbst löschen
+            using (var cmdMon = new NpgsqlCommand("DELETE FROM monitors WHERE moid=@m", conn))
+            {
+                cmdMon.Parameters.AddWithValue("@m", m.Moid);
+                cmdMon.ExecuteNonQuery();
+            }
+
+            MessageBox.Show("Monitor wurde gelöscht.");
+
+            // 4) UI aktualisieren
+            AktualisiereAnzeige();
+        }
+
+
+        private void BtnAssignMonitor_Click(object sender, RoutedEventArgs e)
+        {
+            Patient p = dgPatienten.SelectedItem as Patient;
+            Monitor m = cbFreieMonitore.SelectedItem as Monitor;
+
+            if (p == null)
+            {
+                MessageBox.Show("Bitte einen Patienten auswählen!");
+                return;
+            }
+
+            if (m == null)
+            {
+                MessageBox.Show("Bitte einen freien Monitor auswählen!");
                 return;
             }
 
             var conn = new NpgsqlConnection(connString);
             conn.Open();
-            var cmd = new NpgsqlCommand("DELETE FROM monitors WHERE moid=@m", conn);
-            cmd.Parameters.AddWithValue("@m", m.Moid);
-            cmd.ExecuteNonQuery();
+
+            // Alte Zuordnung entfernen
+            var cmdDelete = new NpgsqlCommand("DELETE FROM belegung WHERE pid=@p", conn);
+            cmdDelete.Parameters.AddWithValue("@p", p.Id);
+            cmdDelete.ExecuteNonQuery();
+
+            // Neue Zuordnung speichern
+            var cmdInsert = new NpgsqlCommand("INSERT INTO belegung (moid, pid) VALUES (@m, @p)", conn);
+            cmdInsert.Parameters.AddWithValue("@m", m.Moid);
+            cmdInsert.Parameters.AddWithValue("@p", p.Id);
+            cmdInsert.ExecuteNonQuery();
+
+            MessageBox.Show("Monitor wurde neu zugewiesen.");
 
             AktualisiereAnzeige();
         }
+
     }
+
 }

@@ -18,5 +18,6 @@ namespace AdministrationApp
         public bool IstBelegt { get; set; } = false;
 
     }
+
 }
         
