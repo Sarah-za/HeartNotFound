@@ -1,0 +1,38 @@
+﻿<Window x:Class="Remotmonitor.Views.VitalHistoryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Remotmonitor.Views"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterOwner"
+        Title="Verlauf Vitaldaten" Height="700" Width="1000">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10" Orientation="Vertical" Background="#111">
+            <!--Zeitauswahl Buttin -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Text="Zeitraum" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <Button Content="1 min" Tag="60" Click="TimeRange_Click" Margin="5,0"/>
+                <Button Content="10 min" Tag="600" Click="TimeRange_Click" Margin="5,0"/>
+                <Button Content="30 min" Tag="1800" Click="TimeRange_Click" Margin="5,0"/>
+                <Button Content="1 h" Tag="3600" Click="TimeRange_Click" Margin="5,0"/>
+            </StackPanel>
+
+            <Label Content="Herzfrequenz (bpm)" Foreground="Yellow" FontWeight="Bold"/>
+            <Canvas x:Name="Canvas_HR" Height="100" Margin="0,0,0,20" Background="#222"/>
+
+            <Label Content="Temperatur (°C)" Foreground="Orange" FontWeight="Bold"/>
+            <Canvas x:Name="Canvas_Temp" Height="100" Margin="0,0,0,20" Background="#222"/>
+            <Label Content="Blutdruck (mmHg)" Foreground="Red" FontWeight="Bold"/>
+            <Canvas x:Name="Canvas_BP" Height="100" Margin="0,0,0,20" Background="#222"/>
+
+            <Label Content="Atemfrequnez (/min)" Foreground="LightBlue" FontWeight="Bold"/>
+            <Canvas x:Name="Canvas_RR" Height="100" Margin="0,0,0,20" Background="#222"/>
+
+            <Label Content="Sauerstoffsättigung (%)" Foreground="Purple" FontWeight="Bold"/>
+            <Canvas x:Name="Canvas_SPO2" Height="100" Margin="0,0,0,20" Background="#222"/>
+        </StackPanel>
+    </ScrollViewer>
+
+
+</Window>

@@ -86,7 +86,8 @@ public partial class MainWindow : Window
         SearchBox.SelectAll();
     }
 
-
+    /*
+  
     // NEU: Doppelklick auf Karte -> Detailfenster
     private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -104,8 +105,25 @@ public partial class MainWindow : Window
             win.ShowDialog();
         }
     }
+     */
 
+    private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        // Nur bei Doppelklick reagieren
+        if (e.ClickCount != 2) return;
 
+        if ((sender as FrameworkElement)?.DataContext is VitalSample v)
+        {
+            var win = new Remotmonitor.Views.VitalHistoryWindow(v)
+            {
+                Owner = this,
+            };
+            e.Handled = true; // verhindert, dass ScrollViewer/ListView weiterreagiert
+            win.ShowDialog();
+        }
+
+    }
+ 
     private void PatientList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (PatientList.SelectedItem is not VitalSample patient)
