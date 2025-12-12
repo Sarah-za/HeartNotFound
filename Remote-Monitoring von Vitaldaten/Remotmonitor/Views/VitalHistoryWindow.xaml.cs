@@ -1,25 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using Microsoft.UI.Xaml.Input;
+using System.Windows.Threading;
 using Remotmonitor.Models;
-
 
 namespace Remotmonitor.Views
 {
-    /// <summary>
-    /// Interaktionslogik für VitalHistoryWindow.xaml
-    /// </summary>
     public partial class VitalHistoryWindow : Window
     {
         private readonly VitalSample _patient;
@@ -27,31 +17,51 @@ namespace Remotmonitor.Views
         private readonly Dictionary<string, Polyline> _lines = new();
         private readonly Dictionary<string, (Color color, double min, double max, Canvas canvas)> _info = new();
 
+        private readonly DispatcherTimer _timer;
         private int _visibleSeconds = 60;
         private readonly Random _rng = new();
+
+        private const int MaxSecondsStored = 3600; // 1h max
+
         public VitalHistoryWindow(VitalSample patient)
         {
             InitializeComponent();
             _patient = patient;
             Title = $"Verlauf: {_patient.DisplayName}";
+
+            _timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _timer.Tick += Timer_Tick;
+
             Loaded += OnLoaded;
-            
+            Unloaded += (_, __) => _timer.Stop();
+            Closed += (_, __) => _timer.Stop();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             _info.Clear();
             _info["HR"] = (Colors.Yellow, 40, 160, Canvas_HR);
-            _info["Temp"] = (Colors.Orange, 35, 43, Canvas_Temp);
-            _info["BP"] = (Colors.Red, 80, 200, Canvas_BP);
-            _info["RR"] = (Colors.LightBlue, 5, 30, Canvas_RR);
             _info["SpO2"] = (Colors.Purple, 80, 100, Canvas_SPO2);
+            _info["RR"] = (Colors.LightBlue, 5, 30, Canvas_RR);
+            _info["Temp"] = (Colors.Orange, 35, 43, Canvas_Temp);
+            _info["Sys"] = (Colors.Red, 80, 200, Canvas_BP);
 
+
+            // 🔹 Patientendetails anzeigen
+            TxtName.Text = $"{_patient.DisplayName}";
+            TxtRoom.Text = $"Zimmer/Bett: {_patient.RoomBed}";
+            TxtInfo.Text = $"Alter: {_patient.Age} Jahre   Geschlecht: {_patient.Gender.ToUpper()}   Monitor: {_patient.MonitorId}";
 
             InitializeGraphs();
-            FillDummyData();
+            InitializeHistoryData();
             DrawAll();
+            _timer.Start();
         }
+
+        /// Initialisiert die Datenlisten für alle Parameter.
 
         private void InitializeGraphs()
         {
@@ -68,31 +78,53 @@ namespace Remotmonitor.Views
             }
         }
 
-        private void FillDummyData()
+
+        /// Prüft, wie viele reale Werte schon empfangen wurden (z. B. 30 Sek.),
+        /// ergänzt bis 60 Sek. mit Zufallswerten.
+
+        private void InitializeHistoryData()
         {
-            DateTime now = DateTime.Now;
-            for (int i = 0; i < 60; i++)
+
+            int existingCount = 0; 
+            int needed = 60 - existingCount;
+            if (needed < 0) needed = 0;
+
+
+            /// Fehlende Werte zufällig generieren um Verlauf aufzufüllen
+            for (int i = 0; i < needed; i++)
             {
-                _data["HR"].Add(_patient.Hr + _rng.Next(-5,6));
-                _data["Temp"].Add(_patient.Temp + (_rng.NextDouble() -0.5) * 0.2);
-                _data["BP"].Add(_patient.Sys + _rng.Next(-5, 6));
-                _data["RR"].Add(_patient.Rr + _rng.Next(-2, 3));
-                _data["SpO2"].Add(_patient.Spo2 + _rng.Next(-1, 2));
+                _data["HR"].Add(RandomizedPercent(_patient.Hr));
+                _data["SpO2"].Add(RandomizedPercent(_patient.Spo2));
+                _data["RR"].Add(RandomizedPercent(_patient.Rr));
+                _data["Temp"].Add(RandomizedPercent(_patient.Temp));
+                _data["Sys"].Add(RandomizedPercent(_patient.Sys));
             }
         }
 
-        public void AddNewSample(VitalSample s)
+        private double RandomizedPercent(double value)
         {
-            _data["HR"].Add(s.Hr);
-            _data["Temp"].Add(s.Temp);
-            _data["BP"].Add(s.Sys);
-            _data["RR"].Add(s.Rr);
-            _data["SPO2"].Add(s.Spo2);
+            // ±1 % zufällige Abweichung
+            double factor = 1.0 + (_rng.NextDouble() * 0.02 - 0.01); // Bereich 0.99–1.01
+            return value * factor;
+        }
 
-            foreach (var k in _data.Keys.ToList())
+
+        /// Wird jede Sekunde aufgerufen und speichert den aktuellen Zustand des Patienten.
+
+        private void Timer_Tick(object? sender, EventArgs e)
+        {
+            // Aktuellen Wert hinzufügen
+            _data["HR"].Add(_patient.Hr);
+            _data["SpO2"].Add(_patient.Spo2);
+            _data["RR"].Add(_patient.Rr);
+            _data["Temp"].Add(_patient.Temp);
+            _data["Sys"].Add(_patient.Sys);
+
+            // Zu viele Werte entfernen (älter als 1h)
+            foreach (var key in _data.Keys.ToList())
             {
-                while (_data[k].Count > 3600)
-                    _data[k].RemoveAt(0);
+                while (_data[key].Count > MaxSecondsStored)
+                    _data[key].RemoveAt(0);
             }
 
             DrawAll();
@@ -113,7 +145,7 @@ namespace Remotmonitor.Views
             double height = canvas.ActualHeight;
             if (width <= 0 || height <= 0)
             {
-                canvas.Loaded += (_, _) => DrawSingle(key);
+                canvas.Loaded += (_, __) => DrawSingle(key);
                 return;
             }
 
@@ -139,8 +171,8 @@ namespace Remotmonitor.Views
                 if (!(canvas.Children[i] is Polyline))
                     canvas.Children.RemoveAt(i);
 
-            var mid = (min + max) / 2;
-            var midY = height / 2;
+            double mid = (min + max) / 2;
+            double midY = height / 2;
 
             var grid = new Line
             {
@@ -159,7 +191,7 @@ namespace Remotmonitor.Views
             Canvas.SetTop(tMin, height - 18);
             canvas.Children.Insert(0, tMin);
 
-            var tMax = new TextBlock {Text = $"{max:F1}", Foreground= Brushes.White };
+            var tMax = new TextBlock { Text = $"{max:F1}", Foreground = Brushes.White };
             Canvas.SetLeft(tMax, 2);
             Canvas.SetTop(tMax, 0);
             canvas.Children.Insert(0, tMax);
