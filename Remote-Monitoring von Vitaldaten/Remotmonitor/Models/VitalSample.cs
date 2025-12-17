@@ -36,6 +36,10 @@ public partial class VitalSample : ObservableObject
 
     public string Status => IsStale ? "Keine Daten" : "OK";
 
+    private const int MaxHistorySeconds = 3600; // 1 Stunde
+
+    public List<VitalSnapshot> History { get; } = new();
+
     public bool IsStale
     {
         get
@@ -157,6 +161,23 @@ public partial class VitalSample : ObservableObject
                 OnPropertyChanged();
             }
         }
+    }
+
+    // Nötig um jede Sekunde Daten zu speichern für Graphen
+    public void AddSnapshot()
+    {
+        History.Add(new VitalSnapshot
+        {
+            Ts = DateTime.UtcNow,
+            Hr = Hr,
+            Spo2 = Spo2,
+            Rr = Rr,
+            Temp = Temp,
+            Sys = Sys
+        });
+
+        if (History.Count > MaxHistorySeconds)
+            History.RemoveAt(0);
     }
 
 

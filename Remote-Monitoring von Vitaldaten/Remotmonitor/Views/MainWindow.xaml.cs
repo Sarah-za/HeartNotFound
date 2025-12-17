@@ -107,6 +107,7 @@ public partial class MainWindow : Window
     }
      */
 
+    /***
     private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         // Nur bei Doppelklick reagieren
@@ -123,23 +124,53 @@ public partial class MainWindow : Window
         }
 
     }
- 
+
+    
+private void PatientList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+{
+    if (PatientList.SelectedItem is not VitalSample patient)
+        return;
+
+    var win = new ThresholdWindow(patient)
+    {
+        Owner = this
+    };
+
+    bool? result = win.ShowDialog();
+
+    if (result == true)
+    {
+        // Nach Änderung Alarmfarbe neu berechnen
+        patient.EvaluateAlarmBrush();
+    }
+}
+    ***/
+
+    private void Card_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount != 2) return;
+
+        if ((sender as FrameworkElement)?.DataContext is VitalSample v)
+        {
+            OpenHistory(v);
+            e.Handled = true;
+        }
+    }
+
     private void PatientList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (PatientList.SelectedItem is not VitalSample patient)
-            return;
+        if (PatientList.SelectedItem is VitalSample patient)
+        {
+            OpenHistory(patient);
+        }
+    }
 
-        var win = new ThresholdWindow(patient)
+    private void OpenHistory(VitalSample patient)
+    {
+        var win = new Remotmonitor.Views.VitalHistoryWindow(patient)
         {
             Owner = this
         };
-
-        bool? result = win.ShowDialog();
-
-        if (result == true)
-        {
-            // Nach Änderung Alarmfarbe neu berechnen
-            patient.EvaluateAlarmBrush();
-        }
+        win.Show();
     }
 }

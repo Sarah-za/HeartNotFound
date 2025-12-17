@@ -112,7 +112,14 @@ namespace Remotmonitor.Services
             _staleTimer.Tick += (s, e) =>
             {
                 foreach (var p in _patients.Values)
+                {
                     p.StalePulse++;
+
+                    // Jede Sekunde Parameter speichern für Graphen
+                    p.AddSnapshot();
+                }
+                    
+                    
             };
 
             _staleTimer.Start();

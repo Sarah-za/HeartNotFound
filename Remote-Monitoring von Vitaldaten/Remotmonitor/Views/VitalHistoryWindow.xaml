@@ -6,20 +6,45 @@
         xmlns:local="clr-namespace:Remotmonitor.Views"
         mc:Ignorable="d"
         WindowStartupLocation="CenterOwner"
-        Title="Verlauf Vitaldaten" Height="1000" Width="1000">
+        Title="Verlauf Vitaldaten" Height="1330" Width="1200">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10" Orientation="Vertical" Background="#111">
 
             <!-- 🔹 Patienteninformationen -->
-            <Border BorderBrush="Cyan" BorderThickness="1" Padding="10" CornerRadius="8" Margin="0,0,0,15">
-                <StackPanel Orientation="Vertical">
-                    <TextBlock x:Name="TxtName" FontSize="20" FontWeight="Bold" Foreground="Cyan"/>
-                    <TextBlock x:Name="TxtRoom" FontSize="16" Foreground="White" Margin="0,2,0,0"/>
-                    <TextBlock x:Name="TxtInfo" FontSize="16" Foreground="White"/>
+            <Border BorderBrush="Cyan"
+            BorderThickness="1"
+            Padding="10"
+            CornerRadius="8">
+                <StackPanel>
+                    <TextBlock x:Name="TxtName"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="Cyan"/>
+                    <TextBlock x:Name="TxtRoom"
+                       FontSize="15"
+                       Foreground="White"/>
+                    <TextBlock x:Name="TxtInfo"
+                       FontSize="15"
+                       Foreground="White"/>
                 </StackPanel>
             </Border>
-            
+
+            <!-- 🔹 Threshold-Button rechts -->
+            <Button Grid.Column="1"
+            Content="Thresholds ⚙"
+            Click="Threshold_Click"
+            Background="Black"
+            Foreground="Cyan"
+            FontSize="16"
+            FontWeight="Bold"
+            Padding="20,10"
+            Margin="15,0,0,0"
+            BorderBrush="Cyan"
+            BorderThickness="1"
+            Cursor="Hand"
+            VerticalAlignment="Top"/>
+
             <!--Zeitauswahl Button -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,20" HorizontalAlignment="Center">
                 <TextBlock Text="Zeitraum:" Foreground="White" FontSize="16"
@@ -50,20 +75,28 @@
                         BorderBrush="Cyan" BorderThickness="1" Cursor="Hand"/>
             </StackPanel>
 
-            <Label Content="Herzfrequenz (bpm)" Foreground="Yellow" FontWeight="Bold"/>
-            <Canvas x:Name="Canvas_HR" Height="100" Margin="0,0,0,20" Background="#222"/>
+            <Label Content="Herzfrequenz (bpm)" Foreground="Lime" FontWeight="Bold" FontSize="18"/>
+            <Canvas x:Name="Canvas_HR" Height="150" Margin="0,0,0,20" Background="#222"/>
 
-            <Label Content="Temperatur (°C)" Foreground="Orange" FontWeight="Bold"/>
-            <Canvas x:Name="Canvas_Temp" Height="100" Margin="0,0,0,20" Background="#222"/>
-            <Label Content="Blutdruck (mmHg)" Foreground="Red" FontWeight="Bold"/>
-            <Canvas x:Name="Canvas_BP" Height="100" Margin="0,0,0,20" Background="#222"/>
+            <Label Content="Temperatur (°C)" Foreground="White" FontWeight="Bold" FontSize="18"/>
+            <Canvas x:Name="Canvas_Temp" Height="150" Margin="0,0,0,20" Background="#222"/>
 
-            <Label Content="Atemfrequnez (/min)" Foreground="LightBlue" FontWeight="Bold"/>
-            <Canvas x:Name="Canvas_RR" Height="100" Margin="0,0,0,20" Background="#222"/>
+            <Label Content="Blutdruck (mmHg)" Foreground="Tomato" FontWeight="Bold" FontSize="18"/>
+            <Canvas x:Name="Canvas_BP" Height="150" Margin="0,0,0,20" Background="#222"/>
 
-            <Label Content="Sauerstoffsättigung (%)" Foreground="Purple" FontWeight="Bold"/>
-            <Canvas x:Name="Canvas_SPO2" Height="100" Margin="0,0,0,20" Background="#222"/>
+            <Label Content="Atemfrequnez (/min)" Foreground="Gold" FontWeight="Bold" FontSize="18"/>
+            <Canvas x:Name="Canvas_RR" Height="150" Margin="0,0,0,20" Background="#222"/>
+
+            <Label Content="Sauerstoffsättigung (%)" Foreground="DeepSkyBlue" FontWeight="Bold" FontSize="18"/>
+            <Canvas x:Name="Canvas_SPO2" Height="150" Margin="0,0,0,20" Background="#222"/>
+
+            <Canvas x:Name="Canvas_TimeAxis"
+                Height="30"
+                Margin="0,0,0,20"
+                Background="Transparent"/>
         </StackPanel>
+
+
     </ScrollViewer>
 
 
