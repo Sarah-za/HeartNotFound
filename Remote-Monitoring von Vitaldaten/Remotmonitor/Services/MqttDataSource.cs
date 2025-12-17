@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MQTTnet;
+﻿using MQTTnet;
 using MQTTnet.Client;
 using Remotmonitor.Models;
 using Remotmonitor.Services;
-using Windows.Foundation.Collections;
-using Windows.Security.Cryptography.Core;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Remotmonitor.Services
@@ -28,8 +26,6 @@ namespace Remotmonitor.Services
         // Nur Daten akzeptieren, die nach Start eintreffen
         private readonly DateTime _programStart = DateTime.UtcNow;
 
-        private readonly Random _rng = new();
-
         // StationID → PatientID
         private readonly Dictionary<string, string> _stationToPatient = new();
 
@@ -40,15 +36,22 @@ namespace Remotmonitor.Services
         private readonly Dictionary<string, string> _room = new();
         private readonly Dictionary<string, int> _bed = new();
 
+        // StationID → Buffer
         private readonly Dictionary<string, PartialVital> _buffer = new();
 
-        // Thresholds & Patienteninstanzen persistieren zur Laufzeit
+        // PatientID → Thresholds
         private readonly Dictionary<string, Threshold> _savedThresholds = new();
+
+        // PatientID → VitalSample
         private readonly Dictionary<string, VitalSample> _patients = new();
+
+        // StationID → Name aus DB (Cache!)
+        private readonly Dictionary<string, (string First, string Last)> _patientCache = new();
 
         private int _nextPatientNr = 1;
 
-      
+        private readonly PatientRepository _repo = new();
+        private readonly Random _rng = new();
 
         private class PartialVital
         {
@@ -74,7 +77,6 @@ namespace Remotmonitor.Services
             var options = new MqttClientOptionsBuilder()
                 .WithClientId(Guid.NewGuid().ToString())
                 .WithTcpServer(broker, port)
-                .WithProtocolVersion(MQTTnet.Formatter.MqttProtocolVersion.V311)
                 .WithCredentials(username, password)
                 .WithTlsOptions(o =>
                 {
@@ -84,7 +86,6 @@ namespace Remotmonitor.Services
                 .Build();
 
             var result = await client.ConnectAsync(options, ct);
-
             if (result.ResultCode != MqttClientConnectResultCode.Success)
             {
                 Console.WriteLine("[MQTT] Connect failed: " + result.ResultCode);
@@ -95,7 +96,6 @@ namespace Remotmonitor.Services
 
             client.ApplicationMessageReceivedAsync += OnMqttMessage;
 
-            // Topics abonnieren
             await client.SubscribeAsync("25pms02/+/heartrate");
             await client.SubscribeAsync("25pms02/+/temperature");
             await client.SubscribeAsync("25pms02/+/bloodpressure");
@@ -104,46 +104,45 @@ namespace Remotmonitor.Services
 
             Console.WriteLine("[MQTT] Subscribed.");
 
-            var _staleTimer = new DispatcherTimer
+            // 🔹 1-Hz Timer für Historie (läuft IMMER)
+            var historyTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
 
-            _staleTimer.Tick += (s, e) =>
+            historyTimer.Tick += (_, __) =>
             {
                 foreach (var p in _patients.Values)
                 {
                     p.StalePulse++;
-
-                    // Jede Sekunde Parameter speichern für Graphen
                     p.AddSnapshot();
                 }
-                    
-                    
             };
 
-            _staleTimer.Start();
+            historyTimer.Start();
+
+
         }
 
         private Task OnMqttMessage(MqttApplicationMessageReceivedEventArgs e)
         {
+
+            if (e.ApplicationMessage.Retain)
+                return Task.CompletedTask;
+
             string topic = e.ApplicationMessage.Topic;
             string payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
 
-            // Retained ignorieren (keine alten Werte beim Start)
-            if (e.ApplicationMessage.Retain)
-            {
-                Console.WriteLine("[MQTT] Ignoring retained: " + topic);
-                return Task.CompletedTask;
-            }
+            Console.WriteLine($"[MQTT] Message received: Topic='{e.ApplicationMessage.Topic}', Payload='{payload}'");
 
-            // Topic: 25pms02/<station>/<param>
             var parts = topic.Split('/');
-            if (parts.Length < 3) return Task.CompletedTask;
+            if (parts.Length < 3)
+                return Task.CompletedTask;
 
             string stationId = parts[1];
             string parameter = parts[2];
 
+            // 🔹 Station → PatientID
             // Patient-ID für Station vergeben (noch ohne Objekt-Erzeugung)
             if (!_stationToPatient.ContainsKey(stationId))
             {
@@ -151,11 +150,17 @@ namespace Remotmonitor.Services
                 _nextPatientNr++;
                 _stationToPatient[stationId] = pid;
 
-                // Demographie + Zimmer
-                string gender = _rng.NextDouble() < 0.5 ? "m" : "w";
-                int age = _rng.Next(18, 90);
-                _demo[pid] = (gender, age);
+                // ✅ DB-Abgleich über moid (z.B. "20")
+                if (!_patientCache.ContainsKey(stationId))
+                {
+                    var dbName = _repo.GetPatientByMonitorId(stationId);
+                    _patientCache[stationId] = dbName ?? ("Unbekannt", "Patient");
+                }
 
+                // Demographie (optional später aus DB)
+                _demo[pid] = ("?", 0);
+
+                // Zimmer/Bett kannst du lassen wie bisher
                 string[] rooms = { "101", "102", "103", "104" };
                 string room = rooms[_rng.Next(rooms.Length)];
                 int bed = _rng.Next(1, 5);
@@ -163,30 +168,25 @@ namespace Remotmonitor.Services
                 _room[pid] = room;
                 _bed[pid] = bed;
 
-                Console.WriteLine($"[MQTT] New patient id reserved: {pid} for station {stationId}");
+                Console.WriteLine($"[MQTT] New patient id reserved: {pid} for station {stationId} -> {_patientCache[stationId].First} {_patientCache[stationId].Last}");
             }
 
             string patientId = _stationToPatient[stationId];
 
-            // Buffer je Station
             if (!_buffer.ContainsKey(stationId))
                 _buffer[stationId] = new PartialVital();
 
             var b = _buffer[stationId];
 
-            // Timestamp NUR setzen, wenn nach Programmbeginn
             if (!b.Ts.HasValue)
             {
                 var now = DateTime.UtcNow;
                 if (now < _programStart)
-                {
-                    Console.WriteLine("[MQTT] Ignoring old message (before program start)");
                     return Task.CompletedTask;
-                }
+
                 b.Ts = now;
             }
 
-            // Werte eintragen
             try
             {
                 switch (parameter)
@@ -203,20 +203,30 @@ namespace Remotmonitor.Services
                 return Task.CompletedTask;
             }
 
-            // Erst wenn vollständig: Patient ggf. erzeugen + UI updaten
-            if (!b.Complete) return Task.CompletedTask;
+            if (!b.Complete)
+                return Task.CompletedTask;
 
-            // Patient existiert noch nicht? -> JETZT erzeugen (nach Start, mit vollständigem Set)
+            // 🔹 VitalSample JETZT erzeugen
             if (!_patients.ContainsKey(patientId))
             {
                 var (gender2, age2) = _demo[patientId];
+
+                // ✅ Namen IMMER aus dem Cache holen
+                var (firstName, lastName) = _patientCache.TryGetValue(stationId, out var n)
+                    ? n
+                    : ("Unbekannt", "Patient");
 
                 var sample = new VitalSample
                 {
                     PatientId = patientId,
                     MonitorId = stationId,
+
+                    FirstName = firstName,
+                    LastName = lastName,
+
                     Gender = gender2,
                     Age = age2,
+
                     Room = _room[patientId],
                     Bed = _bed[patientId],
                     Ts = b.Ts.Value,
@@ -228,10 +238,9 @@ namespace Remotmonitor.Services
                 _patients[patientId] = sample;
                 _savedThresholds[patientId] = sample.Limits;
 
-                Console.WriteLine($"[MQTT] Patient object created: {patientId}");
+                Console.WriteLine($"[MQTT] Patient object created: {patientId} ({sample.FirstName} {sample.LastName}) for Monitor {stationId}");
             }
 
-            // Vorhandenes Objekt aktualisieren
             var vitals = _patients[patientId];
             vitals.Ts = b.Ts.Value;
             vitals.Hr = (int)b.Hr.Value;
@@ -239,15 +248,11 @@ namespace Remotmonitor.Services
             vitals.Rr = (int)b.Rr.Value;
             vitals.Temp = b.Temp.Value;
             vitals.Sys = (int)b.Sys.Value;
-            vitals.Dia = (int)(b.Sys.Value - 50);
+            vitals.Dia = vitals.Sys - 50;
 
-
-            // UI updaten
             OnSample?.Invoke(vitals);
 
-            // Buffer für diese Station zurücksetzen (für das nächste Paket)
             _buffer[stationId] = new PartialVital();
-
             return Task.CompletedTask;
         }
 
@@ -256,6 +261,5 @@ namespace Remotmonitor.Services
             if (client != null && client.IsConnected)
                 await client.DisconnectAsync();
         }
-
     }
 }

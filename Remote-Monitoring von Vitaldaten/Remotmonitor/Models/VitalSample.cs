@@ -11,6 +11,10 @@ public partial class VitalSample : ObservableObject
     [ObservableProperty] private string patientId = "P-0001";
     [ObservableProperty] private string monitorId = "MON-01";
 
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string FullName => $"{FirstName} {LastName}";
+
     // Demographie
     [ObservableProperty] private string gender = "m"; // "m", "w", "d"
     [ObservableProperty] private int age = 50;        // Jahre

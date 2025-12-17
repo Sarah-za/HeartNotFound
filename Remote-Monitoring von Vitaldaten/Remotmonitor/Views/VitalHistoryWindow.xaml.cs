@@ -44,7 +44,7 @@ namespace Remotmonitor.Views
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            TxtName.Text = _patient.DisplayName;
+            TxtName.Text = $"{_patient.PatientId} – {_patient.FirstName} {_patient.LastName}";
             TxtRoom.Text = $"Zimmer/Bett: {_patient.RoomBed}";
             TxtInfo.Text =
                 $"Alter: {_patient.Age} Jahre   " +
