@@ -124,45 +124,62 @@
                                 </Grid.RowDefinitions>
 
                                 <!-- Eingabefelder + Buttons -->
-                                <Grid Margin="0,0,0,10">
+                                <Grid Margin="0,0,0,10" VerticalAlignment="Top">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="100"/>
-                                        <!-- Vorname -->
                                         <ColumnDefinition Width="100"/>
-                                        <!-- Nachname -->
+                                        <ColumnDefinition Width="140"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <!-- ComboBox + Buttons -->
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Vorname -->
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Vorname" FontSize="10" Foreground="Gray" Margin="0,0,0,2"/>
-                                        <TextBox Grid.Column="0" x:Name="txtVorname" Width="90" Height="26" VerticalContentAlignment="Center"  />
+                                        <TextBlock Text="Vorname" FontSize="12" Foreground="Gray"/>
+                                        <TextBox x:Name="txtVorname" Height="26" VerticalContentAlignment="Center"/>
                                     </StackPanel>
-
                                     <!-- Nachname -->
-                                    <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                                        <TextBlock Text="Nachname" FontSize="10" Foreground="Gray" Margin="0,0,0,2"/>
-                                        <TextBox Grid.Column="1" x:Name="txtNachname" Width="90" Height="26" VerticalContentAlignment="Center"/>
+                                    <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                        <TextBlock Text="Nachname" FontSize="12" Foreground="Gray"/>
+                                        <TextBox x:Name="txtNachname"  Height="26" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                    <!-- Monitor auswählen -->
+                                    <StackPanel Grid.Column="2" Margin="6,0,0,0">
+                                        <TextBlock Text="Monitor auswählen" FontSize="12" Foreground="Gray"/>
+                                        <ComboBox x:Name="cbFreieMonitore"  Height="26" VerticalContentAlignment="Center"/>
                                     </StackPanel>
 
-                                    <!-- ComboBox + alle Buttons im StackPanel nebeneinander -->
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,14,0,0">
-                                        <!-- Freie Monitore -->
-                                        <ComboBox x:Name="cbFreieMonitore" DisplayMemberPath="Modell" SelectedValuePath="Moid" 
-                                                  Width="90" Height="26" FontSize="12" Margin="0,0,4,0"/>
+                                    <!-- Buttons (auf gleiche Höhe ausgerichtet) -->
+                                    <Button Grid.Column="3"
+            Content="➕ Hinzufügen"
+            Click="BtnAdd_Click"
+            Style="{StaticResource PrimaryButton}"
+            Background="{StaticResource PrimaryButtonBg}"
+            Width="110"
+            Height="26"
+            VerticalAlignment="Bottom"
+            Margin="8,0,0,0"/>
 
-                                        <!-- Buttons -->
-                                        <Button Content="💻 Zuweisen" Click="BtnAssignMonitor_Click" 
-                                                           Style="{StaticResource PrimaryButton}" Background="{StaticResource PrimaryButtonBg}" 
-                                                           Width="90" Height="26" FontSize="12" Margin="0,0,4,0"/>
-                                        <Button Content="➕ Hinzufügen" Click="BtnAdd_Click" 
-                                                        Style="{StaticResource PrimaryButton}" Background="{StaticResource PrimaryButtonBg}" 
-                                                        Width="90" Height="26" FontSize="12" Margin="0,0,4,0"/>
-                                        <Button Content="🗑 Löschen" Click="BtnDelete_Click" 
-                                                        Style="{StaticResource PrimaryButton}" Background="{StaticResource AccentButtonBg}" 
-                                                        Width="90" Height="26" Margin="0,0,4,0"/>
-                                    </StackPanel>
+                                    <Button Grid.Column="4"
+            Content="💻 Neu zuweisen"
+            Click="BtnAssignMonitor_Click"
+            Style="{StaticResource PrimaryButton}"
+            Background="{StaticResource PrimaryButtonBg}"
+            Width="120"
+            Height="26"
+            VerticalAlignment="Bottom"
+            Margin="4,0,0,0"/>
+
+                                    <Button Grid.Column="5"
+            Content="🗑 Löschen"
+            Click="BtnDelete_Click"
+            Style="{StaticResource PrimaryButton}"
+            Background="{StaticResource AccentButtonBg}"
+            Width="90"
+            Height="26"
+            VerticalAlignment="Bottom"
+            Margin="4,0,0,0"/>
                                 </Grid>
 
                                 <!-- DataGrid Patienten -->
@@ -186,7 +203,7 @@
                                         <DataGridTextColumn Header="Patient-ID" Binding="{Binding Id}" Width="Auto"/>
                                         <DataGridTextColumn Header="Vorname" Binding="{Binding Vorname}" Width="*"/>
                                         <DataGridTextColumn Header="Nachname" Binding="{Binding Nachname}" Width="*"/>
-                                        <DataGridTextColumn Header="Zuordnung" Binding="{Binding MonitorName}" Width="2*"/>
+                                        <DataGridTextColumn Header="Zugewiesener Monitor" Binding="{Binding MonitorName}" Width="2*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
@@ -228,12 +245,12 @@
 
                                             <Style.Triggers>
                                                 <!-- 🟢 Frei -->
-                                                <DataTrigger Binding="{Binding Status}" Value="🟢 Frei">
+                                                <DataTrigger Binding="{Binding Status}" Value="Frei">
                                                     <Setter Property="Background" Value="#B3FFD9"/>
                                                 </DataTrigger>
 
                                                 <!-- 🔴 Belegt -->
-                                                <DataTrigger Binding="{Binding Status}" Value="🔴 Belegt">
+                                                <DataTrigger Binding="{Binding Status}" Value="Belegt">
                                                     <Setter Property="Background" Value="#FFB3B3"/>
                                                 </DataTrigger>
                                             </Style.Triggers>

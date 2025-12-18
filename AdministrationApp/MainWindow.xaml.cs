@@ -77,7 +77,7 @@ namespace AdministrationApp
                         Modell = drM.GetString(1),
                         PatientName = drM.GetString(2),
                         IstBelegt = drM.GetBoolean(3),
-                        Status = drM.GetBoolean(3) ? "🔴 Belegt" : "🟢 Frei"
+                        Status = drM.GetBoolean(3) ? "Belegt" : "Frei"
                     });
                 }
             }
