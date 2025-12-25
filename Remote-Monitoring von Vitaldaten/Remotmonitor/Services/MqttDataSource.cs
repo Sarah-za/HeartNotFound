@@ -150,7 +150,6 @@ namespace Remotmonitor.Services
                 _nextPatientNr++;
                 _stationToPatient[stationId] = pid;
 
-                // ✅ DB-Abgleich über moid (z.B. "20")
                 if (!_patientCache.ContainsKey(stationId))
                 {
                     var dbName = _repo.GetPatientByMonitorId(stationId);
@@ -211,7 +210,6 @@ namespace Remotmonitor.Services
             {
                 var (gender2, age2) = _demo[patientId];
 
-                // ✅ Namen IMMER aus dem Cache holen
                 var (firstName, lastName) = _patientCache.TryGetValue(stationId, out var n)
                     ? n
                     : ("Unbekannt", "Patient");
@@ -249,6 +247,8 @@ namespace Remotmonitor.Services
             vitals.Temp = b.Temp.Value;
             vitals.Sys = (int)b.Sys.Value;
             vitals.Dia = vitals.Sys - 50;
+
+            vitals.RecalculateEws();
 
             OnSample?.Invoke(vitals);
 

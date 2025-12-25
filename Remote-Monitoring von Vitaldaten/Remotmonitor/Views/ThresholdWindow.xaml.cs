@@ -42,18 +42,123 @@ namespace Remotmonitor.Views
             new Row("Dia (mmHg)", t.DiaWarningMin, t.DiaWarningMax, t.DiaCriticalMin, t.DiaCriticalMax)
         };
 
+        private static bool ValidateRow(Row r, out string error)
+        {
+            error = "";
+
+            if (r.WarningMin > r.WarningMax)
+            {
+                error =
+                    $"{r.Parameter}: Warning-Min ({r.WarningMin}) darf nicht größer sein als Warning-Max ({r.WarningMax}).";
+                return false;
+            }
+
+            if (r.WarningMin > r.CriticalMax)
+            {
+                error =
+                    $"{r.Parameter}: Warning-Min ({r.WarningMin}) darf nicht größer sein als Critical-Max ({r.CriticalMax}).";
+                return false;
+            }
+            if (r.CriticalMax < r.WarningMax)
+            {
+                error =
+                    $"{r.Parameter}: Critical-Max ({r.CriticalMax}) darf nicht kleiner sein als Warning-Max ({r.WarningMax}).";
+                return false;
+            }
+            if (r.CriticalMin > r.WarningMax)
+            {
+                error =
+                    $"{r.Parameter}: Critical-Min ({r.CriticalMin}) darf nicht größer sein als Warning-Max ({r.WarningMax}).";
+                return false;
+            }
+            if (r.CriticalMin > r.CriticalMax)
+            {
+                error =
+                    $"{r.Parameter}: Critical-Min ({r.CriticalMin}) darf nicht größer sein als Critical-Max ({r.CriticalMax}).";
+                return false;
+            }
+
+            if (r.WarningMin < r.CriticalMin)
+            {
+                error =
+                    $"{r.Parameter}: Warning-Min ({r.WarningMin}) darf nicht kleiner sein als Critical-Min ({r.CriticalMin}).";
+                return false;
+            }
+
+            if (r.WarningMax > r.CriticalMax)
+            {
+                error =
+                    $"{r.Parameter}: Warning-Max ({r.WarningMax}) darf nicht größer sein als Critical-Max ({r.CriticalMax}).";
+                return false;
+            }
+
+            return true;
+        }
+
+
         private void OnOkClick(object sender, RoutedEventArgs e)
         {
+            // Erst ALLE Zeilen validieren
+            foreach (var r in _rows)
+            {
+                if (!ValidateRow(r, out var msg))
+                {
+                    MessageBox.Show(
+                        msg,
+                        "Ungültige Schwellenwerte",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+
+                    return; // NICHT speichern / Fenster bleibt offen
+                }
+            }
+
+            //Wenn alles gültig ist: übernehmen
             foreach (var r in _rows)
             {
                 switch (r.Parameter)
                 {
-                    case "Temp (°C)": _patient.Limits.TempWarningMin = r.WarningMin; _patient.Limits.TempWarningMax = r.WarningMax; _patient.Limits.TempCriticalMin = r.CriticalMin; _patient.Limits.TempCriticalMax = r.CriticalMax; break;
-                    case "HR (bpm)": _patient.Limits.HrWarningMin = r.WarningMin; _patient.Limits.HrWarningMax = r.WarningMax; _patient.Limits.HrCriticalMin = r.CriticalMin; _patient.Limits.HrCriticalMax = r.CriticalMax; break;
-                    case "SpO₂ (%)": _patient.Limits.Spo2WarningMin = r.WarningMin; _patient.Limits.Spo2WarningMax = r.WarningMax; _patient.Limits.Spo2CriticalMin = r.CriticalMin; _patient.Limits.Spo2CriticalMax = r.CriticalMax; break;
-                    case "RR (/min)": _patient.Limits.RrWarningMin = r.WarningMin; _patient.Limits.RrWarningMax = r.WarningMax; _patient.Limits.RrCriticalMin = r.CriticalMin; _patient.Limits.RrCriticalMax = r.CriticalMax; break;
-                    case "Sys (mmHg)": _patient.Limits.SysWarningMin = r.WarningMin; _patient.Limits.SysWarningMax = r.WarningMax; _patient.Limits.SysCriticalMin = r.CriticalMin; _patient.Limits.SysCriticalMax = r.CriticalMax; break;
-                    case "Dia (mmHg)": _patient.Limits.DiaWarningMin = r.WarningMin; _patient.Limits.DiaWarningMax = r.WarningMax; _patient.Limits.DiaCriticalMin = r.CriticalMin; _patient.Limits.DiaCriticalMax = r.CriticalMax; break;
+                    case "Temp (°C)":
+                        _patient.Limits.TempWarningMin = r.WarningMin;
+                        _patient.Limits.TempWarningMax = r.WarningMax;
+                        _patient.Limits.TempCriticalMin = r.CriticalMin;
+                        _patient.Limits.TempCriticalMax = r.CriticalMax;
+                        break;
+
+                    case "HR (bpm)":
+                        _patient.Limits.HrWarningMin = r.WarningMin;
+                        _patient.Limits.HrWarningMax = r.WarningMax;
+                        _patient.Limits.HrCriticalMin = r.CriticalMin;
+                        _patient.Limits.HrCriticalMax = r.CriticalMax;
+                        break;
+
+                    case "SpO₂ (%)":
+                        _patient.Limits.Spo2WarningMin = r.WarningMin;
+                        _patient.Limits.Spo2WarningMax = r.WarningMax;
+                        _patient.Limits.Spo2CriticalMin = r.CriticalMin;
+                        _patient.Limits.Spo2CriticalMax = r.CriticalMax;
+                        break;
+
+                    case "RR (/min)":
+                        _patient.Limits.RrWarningMin = r.WarningMin;
+                        _patient.Limits.RrWarningMax = r.WarningMax;
+                        _patient.Limits.RrCriticalMin = r.CriticalMin;
+                        _patient.Limits.RrCriticalMax = r.CriticalMax;
+                        break;
+
+                    case "Sys (mmHg)":
+                        _patient.Limits.SysWarningMin = r.WarningMin;
+                        _patient.Limits.SysWarningMax = r.WarningMax;
+                        _patient.Limits.SysCriticalMin = r.CriticalMin;
+                        _patient.Limits.SysCriticalMax = r.CriticalMax;
+                        break;
+
+                    case "Dia (mmHg)":
+                        _patient.Limits.DiaWarningMin = r.WarningMin;
+                        _patient.Limits.DiaWarningMax = r.WarningMax;
+                        _patient.Limits.DiaCriticalMin = r.CriticalMin;
+                        _patient.Limits.DiaCriticalMax = r.CriticalMax;
+                        break;
                 }
             }
 

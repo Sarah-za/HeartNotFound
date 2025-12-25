@@ -40,9 +40,22 @@ public partial class VitalSample : ObservableObject
 
     public string Status => IsStale ? "Keine Daten" : "OK";
 
+    public string CardHeaderLine => $"{PatientId} | Zimmer/Bett: {RoomBed} | Monitor: {MonitorId}";
+
     private const int MaxHistorySeconds = 3600; // 1 Stunde
 
     public List<VitalSnapshot> History { get; } = new();
+
+    private int _ewsHr, _ewsSpo2, _ewsRr, _ewsTemp, _ewsSys;
+    private int _ewsTotal;
+
+    public int EwsHr => _ewsHr;
+    public int EwsSpo2 => _ewsSpo2;
+    public int EwsRr => _ewsRr;
+    public int EwsTemp => _ewsTemp;
+    public int EwsSys => _ewsSys;
+
+    public int EWS => _ewsTotal;
 
     public bool IsStale
     {
@@ -81,77 +94,90 @@ public partial class VitalSample : ObservableObject
 
     partial void OnHrChanged(int value)
     {
-        OnPropertyChanged(nameof(AlarmColor));
+        RecalculateEws();
+        OnPropertyChanged(nameof(EwsHr));
         OnPropertyChanged(nameof(EWS));
+        OnPropertyChanged(nameof(AlarmColor));
     }
+
     partial void OnSpo2Changed(int value)
     {
-        OnPropertyChanged(nameof(AlarmColor));
+        RecalculateEws();
+        OnPropertyChanged(nameof(EwsSpo2));
         OnPropertyChanged(nameof(EWS));
+        OnPropertyChanged(nameof(AlarmColor));
     }
+
     partial void OnRrChanged(int value)
     {
-        OnPropertyChanged(nameof(AlarmColor));
+        RecalculateEws();
+        OnPropertyChanged(nameof(EwsRr));
         OnPropertyChanged(nameof(EWS));
+        OnPropertyChanged(nameof(AlarmColor));
     }
+
     partial void OnTempChanged(double value)
     {
-        OnPropertyChanged(nameof(AlarmColor));
+        RecalculateEws();
+        OnPropertyChanged(nameof(EwsTemp));
         OnPropertyChanged(nameof(EWS));
+        OnPropertyChanged(nameof(AlarmColor));
     }
 
     partial void OnSysChanged(int value)
     {
-        OnPropertyChanged(nameof(AlarmColor));
-        OnPropertyChanged(nameof(Bp));
+        RecalculateEws();
+        OnPropertyChanged(nameof(EwsSys));
         OnPropertyChanged(nameof(EWS));
-    }
-    partial void OnDiaChanged(int value)
-    {
-        OnPropertyChanged(nameof(AlarmColor));
         OnPropertyChanged(nameof(Bp));
-        OnPropertyChanged(nameof(EWS));
+        OnPropertyChanged(nameof(AlarmColor));
     }
 
-    public int EWS
+    public void RecalculateEws()
     {
-        get
-        {
-            int score = 0;
+        // HR
+        _ewsHr =
+            (Hr <= 40) ? 2 :
+            (Hr <= 50) ? 1 :
+            (Hr >= 91 && Hr <= 110) ? 1 :
+            (Hr <= 130) ? 2 :
+            (Hr > 130) ? 3 :
+            0;
 
-            //HR
-            if (Hr <= 40) score += 2;
-            else if (Hr > 40 && Hr <= 50) score += 1;
-            else if (Hr >= 91 && Hr <= 110) score += 1;
-            else if (Hr > 110 && Hr <= 130) score += 2;
-            else if (Hr > 130) score += 3;
+        // SpO2
+        _ewsSpo2 =
+            (Spo2 <= 91) ? 3 :
+            (Spo2 <= 93) ? 2 :
+            (Spo2 <= 95) ? 1 :
+            0;
 
-            //Temp
-            if (Temp < 35.0) score += 3;
-            else if (Temp < 36.0 && Temp > 35.0) score += 1;
-            else if (Temp > 38.0 && Temp <= 39.0) score += 1;
-            else if (Temp > 39.0) score += 2;
+        // RR
+        _ewsRr =
+            (Rr < 8) ? 3 :
+            (Rr <= 11) ? 1 :
+            (Rr <= 20) ? 0 :
+            (Rr <= 24) ? 2 :
+            3;
 
-            //BP
-            if (Sys <= 90) score += 3;
-            else if (Sys > 90 && Sys <= 100) score += 2;
-            else if (Sys > 100 && Sys <= 110) score += 1;
-            else if (Sys >= 220) score += 3;
+        // Temp
+        _ewsTemp =
+            (Temp < 35.0) ? 3 :
+            (Temp < 36.0) ? 1 :
+            (Temp <= 38.0) ? 0 :
+            (Temp <= 39.0) ? 1 :
+            2;
 
-            //RR
-            if (Rr < 8) score += 3;
-            else if (Rr >= 9 && Rr <= 11) score += 1;
-            else if (Rr > 21 && Rr <= 24) score += 2;
-            else if (Rr > 24) score += 3;
+        // Sys
+        _ewsSys =
+            (Sys <= 90) ? 3 :
+            (Sys <= 100) ? 2 :
+            (Sys <= 110) ? 1 :
+            (Sys >= 220) ? 3 :
+            0;
 
-            //Spo2
-            if (Spo2 <= 91) score += 3;
-            else if (Spo2 >= 92 && Spo2 <= 93) score += 2;
-            else if (Spo2 >= 94 && Spo2 <= 95) score += 1;
-
-            return score;
-        }
+        _ewsTotal = _ewsHr + _ewsSpo2 + _ewsRr + _ewsTemp + _ewsSys;
     }
+
 
     private bool _isActive;
     public bool IsActive
@@ -192,4 +218,6 @@ public partial class VitalSample : ObservableObject
 
     partial void OnRoomChanged(string value) => OnPropertyChanged(nameof(RoomBed));
     partial void OnBedChanged(int value) => OnPropertyChanged(nameof(RoomBed));
+
+
 }
