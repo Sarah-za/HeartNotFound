@@ -40,8 +40,6 @@ public partial class VitalSample : ObservableObject
 
     public string Status => IsStale ? "Keine Daten" : "OK";
 
-    public string CardHeaderLine => $"{PatientId} | Zimmer/Bett: {RoomBed} | Monitor: {MonitorId}";
-
     private const int MaxHistorySeconds = 3600; // 1 Stunde
 
     public List<VitalSnapshot> History { get; } = new();
@@ -56,6 +54,8 @@ public partial class VitalSample : ObservableObject
     public int EwsSys => _ewsSys;
 
     public int EWS => _ewsTotal;
+
+    public string CardHeaderLine => $"{PatientId} | Zimmer/Bett: {RoomBed} | Monitor: {MonitorId}";
 
     public bool IsStale
     {
@@ -98,6 +98,8 @@ public partial class VitalSample : ObservableObject
         OnPropertyChanged(nameof(EwsHr));
         OnPropertyChanged(nameof(EWS));
         OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(HrAlarmBackground));
+        OnPropertyChanged(nameof(HrAlarmForeground));
     }
 
     partial void OnSpo2Changed(int value)
@@ -106,6 +108,8 @@ public partial class VitalSample : ObservableObject
         OnPropertyChanged(nameof(EwsSpo2));
         OnPropertyChanged(nameof(EWS));
         OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(Spo2AlarmBackground));
+        OnPropertyChanged(nameof(Spo2AlarmForeground));
     }
 
     partial void OnRrChanged(int value)
@@ -114,6 +118,8 @@ public partial class VitalSample : ObservableObject
         OnPropertyChanged(nameof(EwsRr));
         OnPropertyChanged(nameof(EWS));
         OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(RrAlarmBackground));
+        OnPropertyChanged(nameof(RrAlarmForeground));
     }
 
     partial void OnTempChanged(double value)
@@ -122,6 +128,8 @@ public partial class VitalSample : ObservableObject
         OnPropertyChanged(nameof(EwsTemp));
         OnPropertyChanged(nameof(EWS));
         OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(TempAlarmBackground));
+        OnPropertyChanged(nameof(TempAlarmForeground));
     }
 
     partial void OnSysChanged(int value)
@@ -131,6 +139,8 @@ public partial class VitalSample : ObservableObject
         OnPropertyChanged(nameof(EWS));
         OnPropertyChanged(nameof(Bp));
         OnPropertyChanged(nameof(AlarmColor));
+        OnPropertyChanged(nameof(BpAlarmBackground));
+        OnPropertyChanged(nameof(BpAlarmForeground));
     }
 
     public void RecalculateEws()
@@ -218,6 +228,91 @@ public partial class VitalSample : ObservableObject
 
     partial void OnRoomChanged(string value) => OnPropertyChanged(nameof(RoomBed));
     partial void OnBedChanged(int value) => OnPropertyChanged(nameof(RoomBed));
+
+    public enum VitalAlarmLevel
+    {
+        Normal = 0,
+        Warning = 1,
+        Critical = 2
+    }
+
+    // Farben wie dein restliches UI (Orange/Rot), Normal = Transparent
+    private static readonly Brush AlarmBgNormal = Brushes.Transparent;
+    private static readonly Brush AlarmBgWarning = new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0xA5, 0x00)); // Orange, leicht transparent
+    private static readonly Brush AlarmBgCritical = new SolidColorBrush(Color.FromArgb(0x66, 0xFF, 0x00, 0x00)); // Rot, leicht transparent
+
+    private static readonly Brush AlarmFgNormal = Brushes.White;
+    private static readonly Brush AlarmFgWarning = Brushes.Black;
+    private static readonly Brush AlarmFgCritical = Brushes.White;
+
+    private VitalAlarmLevel EvaluateRange(double value, double wMin, double wMax, double cMin, double cMax)
+    {
+        // Kritisch hat Vorrang
+        if (value < cMin || value > cMax) return VitalAlarmLevel.Critical;
+        if (value < wMin || value > wMax) return VitalAlarmLevel.Warning;
+        return VitalAlarmLevel.Normal;
+    }
+
+    // SpO2: obere Grenze ignorieren (wie gewünscht)
+    private VitalAlarmLevel EvaluateSpo2(double value, double wMin, double cMin)
+    {
+        if (value < cMin) return VitalAlarmLevel.Critical;
+        if (value < wMin) return VitalAlarmLevel.Warning;
+        return VitalAlarmLevel.Normal;
+    }
+
+    // BP: nur systolisch markieren
+    private VitalAlarmLevel EvaluateSys(double value)
+    {
+        return EvaluateRange(value,
+            Limits.SysWarningMin, Limits.SysWarningMax,
+            Limits.SysCriticalMin, Limits.SysCriticalMax);
+    }
+
+    // --- AlarmLevel Properties ---
+    public VitalAlarmLevel HrAlarmLevel => EvaluateRange(Hr, Limits.HrWarningMin, Limits.HrWarningMax, Limits.HrCriticalMin, Limits.HrCriticalMax);
+    public VitalAlarmLevel Spo2AlarmLevel => EvaluateSpo2(Spo2, Limits.Spo2WarningMin, Limits.Spo2CriticalMin);
+    public VitalAlarmLevel RrAlarmLevel => EvaluateRange(Rr, Limits.RrWarningMin, Limits.RrWarningMax, Limits.RrCriticalMin, Limits.RrCriticalMax);
+    public VitalAlarmLevel TempAlarmLevel => EvaluateRange(Temp, Limits.TempWarningMin, Limits.TempWarningMax, Limits.TempCriticalMin, Limits.TempCriticalMax);
+    public VitalAlarmLevel BpAlarmLevel => EvaluateSys(Sys);
+
+    // --- Background Brushes für UI ---
+    public Brush HrAlarmBackground => HrAlarmLevel == VitalAlarmLevel.Critical ? AlarmBgCritical : HrAlarmLevel == VitalAlarmLevel.Warning ? AlarmBgWarning : AlarmBgNormal;
+    public Brush Spo2AlarmBackground => Spo2AlarmLevel == VitalAlarmLevel.Critical ? AlarmBgCritical : Spo2AlarmLevel == VitalAlarmLevel.Warning ? AlarmBgWarning : AlarmBgNormal;
+    public Brush RrAlarmBackground => RrAlarmLevel == VitalAlarmLevel.Critical ? AlarmBgCritical : RrAlarmLevel == VitalAlarmLevel.Warning ? AlarmBgWarning : AlarmBgNormal;
+    public Brush TempAlarmBackground => TempAlarmLevel == VitalAlarmLevel.Critical ? AlarmBgCritical : TempAlarmLevel == VitalAlarmLevel.Warning ? AlarmBgWarning : AlarmBgNormal;
+    public Brush BpAlarmBackground => BpAlarmLevel == VitalAlarmLevel.Critical ? AlarmBgCritical : BpAlarmLevel == VitalAlarmLevel.Warning ? AlarmBgWarning : AlarmBgNormal;
+
+    // --- Foreground Brushes (damit Text lesbar bleibt) ---
+    public Brush HrAlarmForeground => HrAlarmLevel == VitalAlarmLevel.Warning ? AlarmFgWarning : AlarmFgCritical;
+    public Brush Spo2AlarmForeground => Spo2AlarmLevel == VitalAlarmLevel.Warning ? AlarmFgWarning : AlarmFgCritical;
+    public Brush RrAlarmForeground => RrAlarmLevel == VitalAlarmLevel.Warning ? AlarmFgWarning : AlarmFgCritical;
+    public Brush TempAlarmForeground => TempAlarmLevel == VitalAlarmLevel.Warning ? AlarmFgWarning : AlarmFgCritical;
+    public Brush BpAlarmForeground => BpAlarmLevel == VitalAlarmLevel.Warning ? AlarmFgWarning : AlarmFgCritical;
+
+    // Call this whenever thresholds OR values changed:
+    public void RefreshAlarmProperties()
+    {
+        OnPropertyChanged(nameof(AlarmColor));
+
+        OnPropertyChanged(nameof(HrAlarmLevel));
+        OnPropertyChanged(nameof(Spo2AlarmLevel));
+        OnPropertyChanged(nameof(RrAlarmLevel));
+        OnPropertyChanged(nameof(TempAlarmLevel));
+        OnPropertyChanged(nameof(BpAlarmLevel));
+
+        OnPropertyChanged(nameof(HrAlarmBackground));
+        OnPropertyChanged(nameof(Spo2AlarmBackground));
+        OnPropertyChanged(nameof(RrAlarmBackground));
+        OnPropertyChanged(nameof(TempAlarmBackground));
+        OnPropertyChanged(nameof(BpAlarmBackground));
+
+        OnPropertyChanged(nameof(HrAlarmForeground));
+        OnPropertyChanged(nameof(Spo2AlarmForeground));
+        OnPropertyChanged(nameof(RrAlarmForeground));
+        OnPropertyChanged(nameof(TempAlarmForeground));
+        OnPropertyChanged(nameof(BpAlarmForeground));
+    }
 
 
 }

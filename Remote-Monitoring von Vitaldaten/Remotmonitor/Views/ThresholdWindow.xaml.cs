@@ -163,8 +163,11 @@ namespace Remotmonitor.Views
             }
 
             DialogResult = true;
+            _patient.RefreshAlarmProperties();
             Close();
+            
         }
+
 
         private void OnCancelClick(object sender, RoutedEventArgs e)
         {

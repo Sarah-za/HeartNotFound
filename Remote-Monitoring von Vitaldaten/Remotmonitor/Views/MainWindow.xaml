@@ -24,7 +24,42 @@
             <Setter Property="BorderBrush" Value="Gray"/>
         </Style>
 
+        <!-- Zeilen-Stil: Zeile NICHT mehr markieren, nur Schriftfarbe wechseln -->
+        <Style TargetType="ListViewItem">
+            <Setter Property="Background" Value="Black"/>
+            <Setter Property="Foreground" Value="Lime"/>
+
+            <Style.Triggers>
+                <!-- Kritisch -> Rot -->
+                <DataTrigger Binding="{Binding AlarmColor.Color}" Value="{x:Static Colors.Red}">
+                    <Setter Property="Background" Value="Black"/>
+                    <Setter Property="Foreground" Value="Red"/>
+                </DataTrigger>
+
+                <!-- Warning -> Orange -->
+                <DataTrigger Binding="{Binding AlarmColor.Color}" Value="{x:Static Colors.Orange}">
+                    <Setter Property="Background" Value="Black"/>
+                    <Setter Property="Foreground" Value="Orange"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding AlarmColor.Color}" Value="{x:Static Colors.Gold}">
+                    <Setter Property="Background" Value="Black"/>
+                    <Setter Property="Foreground" Value="Orange"/>
+                </DataTrigger>
+
+
+                <!-- Normal -> Grün -->
+                <DataTrigger Binding="{Binding AlarmColor.Color}" Value="{x:Static Colors.Lime}">
+                    <Setter Property="Background" Value="Black"/>
+                    <Setter Property="Foreground" Value="Lime"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+
         <!-- Zeilen-Stil mit Alarmfarben -->
+
+        <!--
         <Style TargetType="ListViewItem">
             <Setter Property="Background" Value="Black"/>
             <Setter Property="Foreground" Value="Lime"/>
@@ -43,6 +78,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        -->
 
         <!-- Karten-Stil -->
         <Style x:Key="CardStyle" TargetType="Border">
@@ -198,11 +234,64 @@
                         <GridViewColumn Header="Bett"   DisplayMemberBinding="{Binding Bed}"  Width="60"/>
                         <GridViewColumn Header="Patient" DisplayMemberBinding="{Binding DisplayName}" Width="210"/>
                         <GridViewColumn Header="Monitor" DisplayMemberBinding="{Binding MonitorId}" Width="90"/>
-                        <GridViewColumn Header="HR" DisplayMemberBinding="{Binding Hr}" Width="60"/>
-                        <GridViewColumn Header="SpO₂ (%)" DisplayMemberBinding="{Binding Spo2}" Width="80"/>
-                        <GridViewColumn Header="RR" DisplayMemberBinding="{Binding Rr}" Width="60"/>
-                        <GridViewColumn Header="Temp (°C)" DisplayMemberBinding="{Binding Temp}" Width="90"/>
-                        <GridViewColumn Header="BP (mmHg)" DisplayMemberBinding="{Binding Bp}" Width="100"/>
+
+                        <GridViewColumn Header="HR" Width="60">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding HrAlarmBackground}" Padding="3" CornerRadius="3">
+                                        <TextBlock Text="{Binding Hr}"
+                           HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="SpO₂ (%)" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Spo2AlarmBackground}" Padding="3" CornerRadius="3">
+                                        <TextBlock Text="{Binding Spo2}"
+                           HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="RR" Width="60">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding RrAlarmBackground}" Padding="3" CornerRadius="3">
+                                        <TextBlock Text="{Binding Rr}"
+                           HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <!-- Temp: FIX (war bei dir fälschlich RR) -->
+                        <GridViewColumn Header="Temp (°C)" Width="90">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding TempAlarmBackground}" Padding="3" CornerRadius="3">
+                                        <TextBlock Text="{Binding Temp, StringFormat={}{0:F1}}"
+                           HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+                        <GridViewColumn Header="BP (mmHg)" Width="100">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding BpAlarmBackground}" Padding="3" CornerRadius="3">
+                                        <TextBlock Text="{Binding Bp}"
+                           HorizontalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
+
                         <GridViewColumn Header="EWS" DisplayMemberBinding="{Binding EWS}" Width="60"/>
 
                         <GridViewColumn Header="Aktiv" Width="60">
@@ -215,13 +304,13 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        
+
                         <GridViewColumn Header="Zeit (lokal)" Width="250">
                             <GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="TsLocal" StringFormat="{}{0:HH:mm:ss dd.MM.yyyy}"/>
                             </GridViewColumn.DisplayMemberBinding>
                         </GridViewColumn>
-                        
+
                         <GridViewColumn Header="Status" Width="180">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
@@ -279,6 +368,7 @@
                                            Foreground="Cyan"
                                            Margin="0,0,0,10"
                                            HorizontalAlignment="Center"/>
+
                                 <UniformGrid Columns="5" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <StackPanel Margin="4,0" HorizontalAlignment="Center">
                                         <!-- EWS Kreis -->
@@ -297,7 +387,12 @@
                                                TextAlignment="Center"/>
                                         </Border>
                                         <TextBlock Text="HR" Foreground="Lime" FontWeight="Bold" FontSize="13"/>
-                                        <TextBlock Text="{Binding Hr}" Foreground="Lime" FontSize="20"/>
+                                        <Border Background="{Binding HrAlarmBackground}" Padding="4,1" CornerRadius="4">
+                                            <TextBlock Text="{Binding Hr}"
+                                                       Foreground="Lime"
+                                                       FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
                                     <StackPanel Margin="4,0" HorizontalAlignment="Center">
                                         <Border Width="28" Height="28" CornerRadius="14"
@@ -309,7 +404,12 @@
                                                        TextAlignment="Center"/>
                                         </Border>
                                         <TextBlock Text="SpO₂ (%)" Foreground="DeepSkyBlue" FontWeight="Bold" FontSize="13"/>
-                                        <TextBlock Text="{Binding Spo2}" Foreground="DeepSkyBlue" FontSize="20"/>
+                                        <Border Background="{Binding Spo2AlarmBackground}" Padding="4,1" CornerRadius="4">
+                                            <TextBlock Text="{Binding Spo2}"
+                                                       Foreground="DeepSkyBlue"
+                                                       FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
                                     <StackPanel Margin="4,0" HorizontalAlignment="Center">
                                         <Border Width="28" Height="28" CornerRadius="14"
@@ -321,7 +421,12 @@
                                                        TextAlignment="Center"/>
                                         </Border>
                                         <TextBlock Text="RR" Foreground="Gold" FontWeight="Bold" FontSize="13"/>
-                                        <TextBlock Text="{Binding Rr}" Foreground="Gold" FontSize="20"/>
+                                        <Border Background="{Binding RrAlarmBackground}" Padding="4,1" CornerRadius="4">
+                                            <TextBlock Text="{Binding Rr}"
+                                                       Foreground="Gold"
+                                                       FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
                                     <StackPanel Margin="4,0" HorizontalAlignment="Center">
                                         <Border Width="28" Height="28" CornerRadius="14"
@@ -333,7 +438,12 @@
                                                        TextAlignment="Center"/>
                                         </Border>
                                         <TextBlock Text="Temp (°C)" Foreground="White" FontWeight="Bold" FontSize="13"/>
-                                        <TextBlock Text="{Binding Temp, StringFormat={}{0:F1}}" Foreground="White" FontSize="20"/>
+                                        <Border Background="{Binding TempAlarmBackground}" Padding="4,1" CornerRadius="4">
+                                            <TextBlock Text="{Binding Temp, StringFormat={}{0:F1}}"
+                                                       Foreground="White"
+                                                       FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
                                     <StackPanel Margin="4,0" HorizontalAlignment="Center">
                                         <Border Width="28" Height="28" CornerRadius="14"
@@ -345,7 +455,12 @@
                                                        TextAlignment="Center"/>
                                         </Border>
                                         <TextBlock Text="BP (mmHg)" Foreground="Tomato" FontWeight="Bold" FontSize="13"/>
-                                        <TextBlock Text="{Binding Bp}" Foreground="Tomato" FontSize="20"/>
+                                        <Border Background="{Binding BpAlarmBackground}" Padding="4,1" CornerRadius="4">
+                                            <TextBlock Text="{Binding Bp}"
+                                                       Foreground="Tomato"
+                                                       FontSize="20"
+                                                       HorizontalAlignment="Center"/>
+                                        </Border>
                                     </StackPanel>
                                 </UniformGrid>
                             </StackPanel>
