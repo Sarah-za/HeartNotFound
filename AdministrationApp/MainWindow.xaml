@@ -127,11 +127,21 @@
                                 <Grid Margin="0,0,0,10" VerticalAlignment="Top">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="100"/>
+                                        <!-- Vorname -->
                                         <ColumnDefinition Width="100"/>
+                                        <!-- Nachname -->
+                                        <ColumnDefinition Width="60"/>
+                                        <!-- Alter -->
+                                        <ColumnDefinition Width="90"/>
+                                        <!-- Geschlecht -->
                                         <ColumnDefinition Width="140"/>
+                                        <!-- Monitor -->
                                         <ColumnDefinition Width="Auto"/>
+                                        <!-- Hinzufügen -->
                                         <ColumnDefinition Width="Auto"/>
+                                        <!-- Neu zuweisen -->
                                         <ColumnDefinition Width="Auto"/>
+                                        <!-- Löschen -->
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Vorname -->
@@ -139,19 +149,39 @@
                                         <TextBlock Text="Vorname" FontSize="12" Foreground="Gray"/>
                                         <TextBox x:Name="txtVorname" Height="26" VerticalContentAlignment="Center"/>
                                     </StackPanel>
+
                                     <!-- Nachname -->
                                     <StackPanel Grid.Column="1" Margin="6,0,0,0">
                                         <TextBlock Text="Nachname" FontSize="12" Foreground="Gray"/>
-                                        <TextBox x:Name="txtNachname"  Height="26" VerticalContentAlignment="Center"/>
-                                    </StackPanel>
-                                    <!-- Monitor auswählen -->
-                                    <StackPanel Grid.Column="2" Margin="6,0,0,0">
-                                        <TextBlock Text="Monitor auswählen" FontSize="12" Foreground="Gray"/>
-                                        <ComboBox x:Name="cbFreieMonitore"  Height="26" VerticalContentAlignment="Center"/>
+                                        <TextBox x:Name="txtNachname" Height="26" VerticalContentAlignment="Center"/>
                                     </StackPanel>
 
-                                    <!-- Buttons (auf gleiche Höhe ausgerichtet) -->
-                                    <Button Grid.Column="3"
+                                    <!-- Alter -->
+                                    <StackPanel Grid.Column="2" Margin="6,0,0,0">
+                                        <TextBlock Text="Alter" FontSize="12" Foreground="Gray"/>
+                                        <TextBox x:Name="txtAlter"
+                 Height="26"
+                 VerticalContentAlignment="Center"
+                 PreviewTextInput="TxtAlter_PreviewTextInput"/>
+                                    </StackPanel>
+
+                                    <!-- Geschlecht -->
+                                    <StackPanel Grid.Column="3" Margin="6,0,0,0">
+                                        <TextBlock Text="Geschlecht" FontSize="12" Foreground="Gray"/>
+                                        <ComboBox x:Name="cbGeschlecht" Height="26" SelectedIndex="0">
+                                            <ComboBoxItem Content="m"/>
+                                            <ComboBoxItem Content="w"/>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <!-- Monitor auswählen -->
+                                    <StackPanel Grid.Column="4" Margin="6,0,0,0">
+                                        <TextBlock Text="Monitor auswählen" FontSize="12" Foreground="Gray"/>
+                                        <ComboBox x:Name="cbFreieMonitore" Height="26"/>
+                                    </StackPanel>
+
+                                    <!-- Hinzufügen -->
+                                    <Button Grid.Column="5"
             Content="➕ Hinzufügen"
             Click="BtnAdd_Click"
             Style="{StaticResource PrimaryButton}"
@@ -159,9 +189,10 @@
             Width="110"
             Height="26"
             VerticalAlignment="Bottom"
-            Margin="8,0,0,0"/>
+            Margin="4,0,0,0"/>
 
-                                    <Button Grid.Column="4"
+                                    <!-- Neu zuweisen -->
+                                    <Button Grid.Column="6"
             Content="💻 Neu zuweisen"
             Click="BtnAssignMonitor_Click"
             Style="{StaticResource PrimaryButton}"
@@ -171,7 +202,8 @@
             VerticalAlignment="Bottom"
             Margin="4,0,0,0"/>
 
-                                    <Button Grid.Column="5"
+                                    <!-- Löschen -->
+                                    <Button Grid.Column="7"
             Content="🗑 Löschen"
             Click="BtnDelete_Click"
             Style="{StaticResource PrimaryButton}"
@@ -181,6 +213,7 @@
             VerticalAlignment="Bottom"
             Margin="4,0,0,0"/>
                                 </Grid>
+
 
                                 <!-- DataGrid Patienten -->
                                 <DataGrid x:Name="dgPatienten" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
@@ -203,6 +236,8 @@
                                         <DataGridTextColumn Header="Patient-ID" Binding="{Binding Id}" Width="Auto"/>
                                         <DataGridTextColumn Header="Vorname" Binding="{Binding Vorname}" Width="*"/>
                                         <DataGridTextColumn Header="Nachname" Binding="{Binding Nachname}" Width="*"/>
+                                        <DataGridTextColumn Header="Alter" Binding="{Binding Alter}" Width="Auto"/>
+                                        <DataGridTextColumn Header="Geschlecht"  Binding="{Binding Geschlecht}" Width="Auto"/>
                                         <DataGridTextColumn Header="Zugewiesener Monitor" Binding="{Binding MonitorName}" Width="2*"/>
                                     </DataGrid.Columns>
                                 </DataGrid>

@@ -41,7 +41,7 @@ namespace AdministrationApp
 
             // --- Patienten laden ---
             var patientenListe = new List<Patient>();
-            using (var cmdP = new NpgsqlCommand("SELECT p.pid, p.vorname, p.name,\r\n       COALESCE(m.model, '-') AS monitor\r\nFROM patients p\r\nLEFT JOIN belegung b ON p.pid = b.pid\r\nLEFT JOIN monitors m ON b.moid = m.moid\r\nORDER BY p.pid\r\n", conn))
+            using (var cmdP = new NpgsqlCommand("SELECT p.pid, p.vorname, p.name, p.alter, p.geschlecht \r\n,       COALESCE(m.model, '-') AS monitor\r\nFROM patients p\r\nLEFT JOIN belegung b ON p.pid = b.pid\r\nLEFT JOIN monitors m ON b.moid = m.moid\r\nORDER BY p.pid\r\n", conn))
             using (var drP = cmdP.ExecuteReader())
             {
                 while (drP.Read())
@@ -51,7 +51,10 @@ namespace AdministrationApp
                         Id = drP.GetInt32(0),
                         Vorname = drP.GetString(1),
                         Nachname = drP.GetString(2),
-                        MonitorName = drP.GetString(3)
+                        Alter = drP.GetInt32(3),
+                        Geschlecht = drP.GetString(4),
+                        MonitorName = drP.GetString(5)
+
                     });
                 }
             }
@@ -96,13 +99,24 @@ namespace AdministrationApp
         {
             string vorname = txtVorname.Text.Trim();
             string nachname = txtNachname.Text.Trim();
+            string alterText = txtAlter.Text.Trim();
+            string geschlecht = (cbGeschlecht.SelectedItem as ComboBoxItem)?.Content.ToString();
 
             if (string.IsNullOrWhiteSpace(vorname) || string.IsNullOrWhiteSpace(nachname))
             {
                 MessageBox.Show("Bitte Vorname und Nachname eingeben!");
                 return;
             }
-
+            if (!int.TryParse(alterText, out int alter) || alter < 0 || alter > 120)
+            {
+                MessageBox.Show("Bitte ein gültiges Alter (0–120) eingeben!");
+                return;
+            }
+            if (string.IsNullOrEmpty(geschlecht))
+            {
+                MessageBox.Show("Bitte Geschlecht auswählen!");
+                return;
+            }
             Monitor monitor = cbFreieMonitore.SelectedItem as Monitor;
             /*if (monitor == null)
             {
@@ -115,11 +129,13 @@ namespace AdministrationApp
 
             // Patient in DB speichern
             var cmdInsert = new NpgsqlCommand(@"
-            INSERT INTO patients (pid, vorname, name)
-            VALUES ((SELECT COALESCE(MAX(pid),0)+1 FROM patients), @v, @n)
+            INSERT INTO patients (pid, vorname, name, alter, geschlecht)
+            VALUES ((SELECT COALESCE(MAX(pid),0)+1 FROM patients), @v, @n, @a, @g)
             RETURNING pid;", conn);
             cmdInsert.Parameters.AddWithValue("@v", vorname);
             cmdInsert.Parameters.AddWithValue("@n", nachname);
+            cmdInsert.Parameters.AddWithValue("@a", alter);
+            cmdInsert.Parameters.AddWithValue("@g", geschlecht);
             int newPid = (int)cmdInsert.ExecuteScalar();
 
             // Monitor zuweisen
@@ -133,8 +149,15 @@ namespace AdministrationApp
 
             txtVorname.Clear();
             txtNachname.Clear();
+            txtAlter.Clear();
             AktualisiereAnzeige();
         }
+        private void TxtAlter_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // erlaubt nur Zahlen
+            e.Handled = !int.TryParse(e.Text, out _);
+        }
+
 
         // 🗑 PATIENT LÖSCHEN
         private void BtnDelete_Click(object sender, RoutedEventArgs e)

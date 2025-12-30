@@ -13,5 +13,7 @@ namespace AdministrationApp
         public string Nachname { get; set; } = string.Empty;
         public int Moid { get; set; }// Zugeordneter Monitor
         public string MonitorName { get; set; }
+        public int Alter { get; internal set; }
+        public string Geschlecht { get; internal set; }
     }
 }
