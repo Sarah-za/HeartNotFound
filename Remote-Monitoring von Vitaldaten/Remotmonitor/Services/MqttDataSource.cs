@@ -146,28 +146,47 @@ namespace Remotmonitor.Services
             // Patient-ID für Station vergeben (noch ohne Objekt-Erzeugung)
             if (!_stationToPatient.ContainsKey(stationId))
             {
+                // Neue interne Patient-ID erzeugen
                 string pid = $"P-{_nextPatientNr:0000}";
                 _nextPatientNr++;
+
                 _stationToPatient[stationId] = pid;
 
-                if (!_patientCache.ContainsKey(stationId))
+                // Monitor-ID (moid) aus stationId ableiten
+                // (stationId kommt bei dir als String, DB erwartet int moid)
+                if (!int.TryParse(stationId, out int moid))
                 {
-                    var dbName = _repo.GetPatientByMonitorId(stationId);
-                    _patientCache[stationId] = dbName ?? ("Unbekannt", "Patient");
+                    // Fallback, falls stationId keine Zahl ist
+                    _patientCache[stationId] = ("Unbekannt", "Patient");
+                    _demo[pid] = ("?", 0);
+                }
+                else
+                {
+                    // Patientendaten aus der DB laden
+                    var dbPatient = _repo.GetPatientByMonitorId(moid);
+
+                    if (dbPatient.HasValue)
+                    {
+                        // Name cachen
+                        _patientCache[stationId] =
+                            (dbPatient.Value.FirstName, dbPatient.Value.LastName);
+
+                        // Alter & Geschlecht cachen
+                        _demo[pid] =
+                            (dbPatient.Value.Gender, dbPatient.Value.Age);
+                    }
+                    else
+                    {
+                        // Kein Patient zugeordnet
+                        _patientCache[stationId] = ("Unbekannt", "Patient");
+                        _demo[pid] = ("?", 0);
+                    }
                 }
 
-                // Demographie (optional später aus DB)
-                _demo[pid] = ("?", 0);
-
-                // Zimmer/Bett kannst du lassen wie bisher
+                // Zimmer / Bett (wie bisher)
                 string[] rooms = { "101", "102", "103", "104" };
-                string room = rooms[_rng.Next(rooms.Length)];
-                int bed = _rng.Next(1, 5);
-
-                _room[pid] = room;
-                _bed[pid] = bed;
-
-                Console.WriteLine($"[MQTT] New patient id reserved: {pid} for station {stationId} -> {_patientCache[stationId].First} {_patientCache[stationId].Last}");
+                _room[pid] = rooms[_rng.Next(rooms.Length)];
+                _bed[pid] = _rng.Next(1, 5);
             }
 
             string patientId = _stationToPatient[stationId];

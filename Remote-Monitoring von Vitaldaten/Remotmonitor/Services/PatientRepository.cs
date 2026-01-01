@@ -18,28 +18,30 @@ namespace Remotmonitor.Services
             "Password=pms_hnf;" +
             "SslMode=Require;Trust Server Certificate=true;";
 
-        public (string FirstName, string LastName)? GetPatientByMonitorId(string stationId)
+        public (string FirstName, string LastName, int Age, string Gender)? GetPatientByMonitorId(int moid)
         {
-            if (!int.TryParse(stationId, out int moid))
-                return null;
-
             using var conn = new NpgsqlConnection(_connString);
             conn.Open();
 
             using var cmd = new NpgsqlCommand(@"
-                SELECT p.vorname, p.name
-                FROM belegung b
-                JOIN patients p ON b.pid = p.pid
-                WHERE b.moid = @moid
-                LIMIT 1;", conn);
+        SELECT p.vorname, p.name, p.alter, p.geschlecht
+        FROM belegung b
+        JOIN patients p ON b.pid = p.pid
+        WHERE b.moid = @moid
+        LIMIT 1;", conn);
 
             cmd.Parameters.AddWithValue("@moid", moid);
 
             using var r = cmd.ExecuteReader();
-            if (!r.Read())
-                return null;
+            if (!r.Read()) return null;
 
-            return (r.GetString(0), r.GetString(1));
+            return (
+                r.GetString(0),
+                r.GetString(1),
+                r.GetInt32(2),
+                r.GetString(3)
+            );
         }
+
     }
 }

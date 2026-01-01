@@ -150,7 +150,7 @@ public partial class VitalSample : ObservableObject
             (Hr <= 40) ? 2 :
             (Hr <= 50) ? 1 :
             (Hr >= 91 && Hr <= 110) ? 1 :
-            (Hr <= 130) ? 2 :
+            (Hr <= 130 && Hr >= 110) ? 2 :
             (Hr > 130) ? 3 :
             0;
 
