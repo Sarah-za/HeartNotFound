@@ -1,0 +1,171 @@
+﻿<Window x:Class="VitalDatenSimulator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VitalDatenSimulator"
+                mc:Ignorable="d"
+        Title="Vitaldaten Simulator"
+        Height="800" Width="950"
+        Background="#f5f5f5">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Vitaldaten Simulator"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Foreground="#2b3e50"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,20"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="350"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ======= Linke Seite: Slider & Einstellungen ======= -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel Orientation="Vertical" Margin="0,0,20,0">
+
+                    <TextBlock Text="{Binding StationID}"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,15"/>
+
+                    <!-- Heart Rate -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Heart Rate (bpm)" FontWeight="Bold"/>
+                        <Slider Minimum="40" Maximum="160"
+                                Value="{Binding HeartRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding HeartRate, StringFormat=Heart\ Rate:\ {0:F1}\ bpm}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+
+                    <!-- Temperature -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Temperature (°C)" FontWeight="Bold"/>
+                        <Slider Minimum="34" Maximum="42"
+                                Value="{Binding Temperature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="0.1" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding Temperature, StringFormat=Temperature:\ {0:F1}\ °C}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+
+                    <!-- Blood Pressure -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Blood Pressure (mmHg)" FontWeight="Bold"/>
+                        <Slider Minimum="70" Maximum="240"
+                                Value="{Binding BloodPressure, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding BloodPressure, StringFormat=Blood\ Pressure:\ {0:F1}\ mmHg}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+
+                    <!-- Resp Rate -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Respiratory Rate (breaths/min)" FontWeight="Bold"/>
+                        <Slider Minimum="6" Maximum="30"
+                                Value="{Binding RespRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="1" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding RespRate, StringFormat=Respiratory\ Rate:\ {0:F1}\ breaths/min}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+
+                    <!-- SpO2 -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Oxygen Saturation (%)" FontWeight="Bold"/>
+                        <Slider Minimum="80" Maximum="99"
+                                Value="{Binding SpO2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="0.5" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding SpO2, StringFormat=Oxygen\ Saturation:\ {0:F1}\ %}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+
+                    <Separator Margin="0,15"/>
+
+                    <TextBlock Text="Simulation Settings"
+                               FontWeight="Bold" FontSize="18"
+                               Margin="0,10,0,5" Foreground="#2b3e50"/>
+
+                    <!-- Change Percent -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Change Percent (%)" FontWeight="Bold"/>
+                        <Slider Minimum="0.25" Maximum="5"
+                                Value="{Binding ChangePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="0.25" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding ChangePercent, StringFormat=Change\ Percent:\ {0:F2}\ %}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+
+                    <!-- Update Interval -->
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="Update Interval (ms)" FontWeight="Bold"/>
+                        <Slider Minimum="100" Maximum="3000"
+                                Value="{Binding UpdateIntervall, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TickFrequency="100" IsSnapToTickEnabled="True"/>
+                        <TextBlock Text="{Binding UpdateIntervall, StringFormat=Update\ Interval:\ {0:F0}\ ms}"
+                                   Foreground="#2b3e50" Margin="0,5"/>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ======= Rechte Seite: Buttons ======= -->
+            <StackPanel Grid.Column="1" Orientation="Vertical" HorizontalAlignment="Center">
+
+                <TextBlock Text="Steuerung"
+                           FontSize="18" FontWeight="Bold"
+                           Foreground="#2b3e50" Margin="0,0,0,10"/>
+
+                <!-- Option A: Wenn du eine Property SimulationButtonText hast, nimm Binding:
+                     Content="{Binding SimulationButtonText}" 
+                     Option B: ansonsten Content fix lassen wie jetzt.
+                -->
+                <Button Content="Start / Stop Simulation"
+                        Background="#2b3e50" Foreground="White"
+                        FontWeight="Bold" Padding="10" Width="250"
+                        Click="ToggleSimulation" Margin="0,0,0,5"/>
+
+                <Button Content="Show Current Values"
+                        Background="#4a708b" Foreground="White"
+                        FontWeight="Bold" Padding="10" Width="250"
+                        Click="ShowValues" Margin="0,0,0,5"/>
+
+                <Button Content="Open Graph Window"
+                        Background="#00695c" Foreground="White"
+                        FontWeight="Bold" Padding="10" Width="250"
+                        Click="OpenGraph" Margin="0,0,0,15"/>
+
+                <!-- Kritische Simulationen -->
+                <GroupBox Header="Critical Simulations" Margin="0,15,0,0">
+                    <StackPanel Orientation="Vertical" Margin="10">
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="Tachycardia" Width="90" Margin="5" Click="SimulateTachycardia"/>
+                            <Button Content="Fever" Width="90" Margin="5" Click="SimulateFever"/>
+                            <Button Content="Hypertension" Width="90" Margin="5" Click="SimulateHypertonie"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">
+                            <Button Content="Bradypnea" Width="90" Margin="5" Click="SimulateBradypnoe"/>
+                            <Button Content="Hypoxia" Width="90" Margin="5" Click="SimulateHypoxia"/>
+                        </StackPanel>
+
+                        <Separator Margin="0,10"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button Content="Normalize" Width="90" Margin="5" Click="Reset"/>
+                            <Button Content="Critical State" Width="90" Margin="5" Click="AlmostDead"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
