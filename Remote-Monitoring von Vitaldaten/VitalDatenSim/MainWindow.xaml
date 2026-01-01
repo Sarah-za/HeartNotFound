@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VitalDatenSim"
+        mc:Ignorable="d"
         Title="Vitaldaten Simulator"
         Height="800" Width="950"
         Background="#f5f5f5">
@@ -40,10 +41,10 @@
                     <!-- Heart Rate -->
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Heart Rate (bpm)" FontWeight="Bold"/>
-                        <Slider Minimum="40" Maximum="140" 
-                                Value="{Binding HeartRate, Mode=TwoWay}"
+                        <Slider Minimum="40" Maximum="160"
+                                Value="{Binding HeartRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding HeartRate, StringFormat='Heart Rate: {0:F1} bpm'}"
+                        <TextBlock Text="{Binding HeartRate, StringFormat=Heart\ Rate:\ {0:F1}\ bpm}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
 
@@ -51,39 +52,39 @@
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Temperature (°C)" FontWeight="Bold"/>
                         <Slider Minimum="34" Maximum="42"
-                                Value="{Binding Temperature, Mode=TwoWay}"
+                                Value="{Binding Temperature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="0.1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding Temperature, StringFormat='Temperature: {0:F1} °C'}"
+                        <TextBlock Text="{Binding Temperature, StringFormat=Temperature:\ {0:F1}\ °C}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
 
                     <!-- Blood Pressure -->
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Blood Pressure (mmHg)" FontWeight="Bold"/>
-                        <Slider Minimum="80" Maximum="240"
-                                Value="{Binding BloodPressure, Mode=TwoWay}"
+                        <Slider Minimum="70" Maximum="240"
+                                Value="{Binding BloodPressure, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding BloodPressure, StringFormat='Blood Pressure: {0:F1} mmHg'}"
+                        <TextBlock Text="{Binding BloodPressure, StringFormat=Blood\ Pressure:\ {0:F1}\ mmHg}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
 
                     <!-- Resp Rate -->
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Respiratory Rate (breaths/min)" FontWeight="Bold"/>
-                        <Slider Minimum="7" Maximum="27"
-                                Value="{Binding RespRate, Mode=TwoWay}"
+                        <Slider Minimum="6" Maximum="30"
+                                Value="{Binding RespRate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="1" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding RespRate, StringFormat='Respiratory Rate: {0:F1} breaths/min'}"
+                        <TextBlock Text="{Binding RespRate, StringFormat=Respiratory\ Rate:\ {0:F1}\ breaths/min}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
 
                     <!-- SpO2 -->
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Oxygen Saturation (%)" FontWeight="Bold"/>
-                        <Slider Minimum="85" Maximum="99"
-                                Value="{Binding SpO2, Mode=TwoWay}"
+                        <Slider Minimum="80" Maximum="99"
+                                Value="{Binding SpO2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="0.5" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding SpO2, StringFormat='Oxygen Saturation: {0:F1} %'}"
+                        <TextBlock Text="{Binding SpO2, StringFormat=Oxygen\ Saturation:\ {0:F1}\ %}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
 
@@ -97,9 +98,9 @@
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Change Percent (%)" FontWeight="Bold"/>
                         <Slider Minimum="0.25" Maximum="5"
-                                Value="{Binding ChangePercent, Mode=TwoWay}"
+                                Value="{Binding ChangePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="0.25" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding ChangePercent, StringFormat='Change Percent: {0} %'}"
+                        <TextBlock Text="{Binding ChangePercent, StringFormat=Change\ Percent:\ {0:F2}\ %}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
 
@@ -107,9 +108,9 @@
                     <StackPanel Margin="0,5">
                         <TextBlock Text="Update Interval (ms)" FontWeight="Bold"/>
                         <Slider Minimum="100" Maximum="3000"
-                                Value="{Binding UpdateIntervall, Mode=TwoWay}"
+                                Value="{Binding UpdateIntervall, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TickFrequency="100" IsSnapToTickEnabled="True"/>
-                        <TextBlock Text="{Binding UpdateIntervall, StringFormat='Update Interval: {0} ms'}"
+                        <TextBlock Text="{Binding UpdateIntervall, StringFormat=Update\ Interval:\ {0:F0}\ ms}"
                                    Foreground="#2b3e50" Margin="0,5"/>
                     </StackPanel>
                 </StackPanel>
@@ -122,6 +123,10 @@
                            FontSize="18" FontWeight="Bold"
                            Foreground="#2b3e50" Margin="0,0,0,10"/>
 
+                <!-- Option A: Wenn du eine Property SimulationButtonText hast, nimm Binding:
+                     Content="{Binding SimulationButtonText}" 
+                     Option B: ansonsten Content fix lassen wie jetzt.
+                -->
                 <Button Content="Start / Stop Simulation"
                         Background="#2b3e50" Foreground="White"
                         FontWeight="Bold" Padding="10" Width="250"
@@ -145,7 +150,6 @@
                             <Button Content="Tachycardia" Width="90" Margin="5" Click="SimulateTachycardia"/>
                             <Button Content="Fever" Width="90" Margin="5" Click="SimulateFever"/>
                             <Button Content="Hypertension" Width="90" Margin="5" Click="SimulateHypertonie"/>
-
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5">

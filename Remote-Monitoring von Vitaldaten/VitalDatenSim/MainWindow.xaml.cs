@@ -1,225 +1,192 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace VitalDatenSim
 {
-    /// <summary>
-    /// Interaktionslogik für MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private readonly Random rnd = new Random();
         private readonly DispatcherTimer timer = new DispatcherTimer();
         private GraphWindow graphWindow;
         private VitalMqttPublisher mqttPublisher;
 
+        // --- NEU: Testbare Simulation ---
+        private readonly VitalSimulationSettings _settings = new VitalSimulationSettings();
+        private readonly VitalSimulationEngine _engine;
+        private readonly SimulationFlags _flags = new SimulationFlags();
+        private VitalValues _current;
+
+        // --- UI / Binding Felder ---
         private string _stationID;
-        public string StationID
-        {
-            get => _stationID;
-            set
-            {
-                _stationID = value;
-                OnPropertyChanged(nameof(StationID));
-            }
-        }
         private double _heartRate;
         private double _temperature;
         private double _bloodPressure;
         private double _respRate;
         private double _spO2;
-        private double _changePercent = 1.0;
+
         private double _updateIntervall = 1000;
-        private bool isRunning = false;
+        private bool isRunning;
 
-        private double minHR = 40, maxHR = 160, stdHR = 75;
-        private double minTemp = 34, maxTemp = 42, stdTemp = 36.7;
-        private double minBP = 70, maxBP = 240, stdBP = 120;
-        private double minRR = 6, maxRR = 30, stdRespRate = 16;
-        private double minSpO2 = 80, maxSpO2 = 99, stdSpO2 = 98;
+        private bool simulateTachy;
+        private bool simulateHypoxia;
+        private bool simulateFever;
+        private bool simulateHypertonie;
+        private bool simualteBradypnoe;
 
-        private bool simulateTachy = false;
-        private bool simulateHypoxia = false;
-        private bool simulateFever = false;
-        private bool simulateHypertonie = false;
-        private bool simualteBradypnoe = false;
+        private bool reset;
+        private bool crit;
 
-        private bool reset = false;
-        private bool crit = false;
-
-        public string SimulationButtonText => isRunning ? "Stop Simulation" : "Start Simulation";
-
-        public double HeartRate { get => _heartRate; set { _heartRate = value; OnPropertyChanged(nameof(HeartRate)); } }
-        public double Temperature { get => _temperature; set { _temperature = value; OnPropertyChanged(nameof(Temperature)); } }
-        public double BloodPressure { get => _bloodPressure; set { _bloodPressure = value; OnPropertyChanged(nameof(BloodPressure)); } }
-        public double RespRate { get => _respRate; set { _respRate = value; OnPropertyChanged(nameof(RespRate)); } }
-        public double SpO2 { get => _spO2; set { _spO2 = value; OnPropertyChanged(nameof(SpO2)); } }
-
-        public double ChangePercent { get => _changePercent; set { _changePercent = value; OnPropertyChanged(nameof(ChangePercent)); } }
-        public double UpdateIntervall
-        {
-            get => _updateIntervall;
-            set { _updateIntervall = value; OnPropertyChanged(nameof(UpdateIntervall)); timer.Interval = TimeSpan.FromMilliseconds(_updateIntervall); }
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public MainWindow()
         {
             InitializeComponent();
-            // StationID = $"Station ID: {rnd.Next(1000, 9999)}";
+
+            _engine = new VitalSimulationEngine(_settings, null);
 
             DataContext = this;
 
-            var inputDialog = new InputDialog();
+            // Station-ID
+            InputDialog inputDialog = new InputDialog();
             bool? result = inputDialog.ShowDialog();
 
             if (result == true && !string.IsNullOrWhiteSpace(inputDialog.EnteredID))
-            {
-                StationID = $"Station ID: {inputDialog.EnteredID}";
-            }
+                StationID = "Station ID: " + inputDialog.EnteredID;
             else
-            {
-                StationID = $"Station ID: {rnd.Next(1000, 9999)}";
-            }
+                StationID = "Station ID: " + new Random().Next(1000, 9999);
 
-
+            // MQTT (wie vorher)
             mqttPublisher = new VitalMqttPublisher();
             mqttPublisher.Connect();
 
+            // Initialwerte (aus Settings)
+            _current = new VitalValues
+            {
+                HeartRate = _settings.StdHR,
+                Temperature = _settings.StdTemp,
+                BloodPressure = _settings.StdBP,
+                RespRate = _settings.StdRR,
+                SpO2 = _settings.StdSpO2
+            };
 
-            HeartRate = stdHR;
-            BloodPressure = stdBP;
-            RespRate = stdRespRate;
-            Temperature = stdTemp;
-            SpO2 = stdSpO2;
+            ApplyValuesToUi(_current);
 
+            // Timer
             timer.Interval = TimeSpan.FromMilliseconds(_updateIntervall);
             timer.Tick += Timer_Tick;
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            if (reset)
-            {
-                HeartRate = MoveTowards(HeartRate, stdHR, 0.05);
-                Temperature = MoveTowards(Temperature, stdTemp, 0.05);
-                BloodPressure = MoveTowards(BloodPressure, stdBP, 0.05);
-                RespRate = MoveTowards(RespRate, stdRespRate, 0.05);
-                SpO2 = MoveTowards(SpO2, stdSpO2, 0.05);
+            // Flags
+            _flags.Reset = reset;
+            _flags.SimulateTachy = simulateTachy;
+            _flags.SimulateFever = simulateFever;
+            _flags.SimulateHypertonie = simulateHypertonie;
+            _flags.SimulateBradypnoe = simualteBradypnoe;
+            _flags.SimulateHypoxia = simulateHypoxia;
 
-                if (Math.Abs(HeartRate - stdHR) < 0.5 &&
-                    Math.Abs(Temperature - stdTemp) < 0.05 &&
-                    Math.Abs(BloodPressure - stdBP) < 0.5 &&
-                    Math.Abs(RespRate - stdRespRate) < 0.2 &&
-                    Math.Abs(SpO2 - stdSpO2) < 0.5)
-                {
-                    reset = false;
-                }
+            SimulationStepResult step = _engine.Step(_current, _flags);
 
-            }
+            _current = step.Values;
+            reset = step.ResetStillActive;
 
+            ApplyValuesToUi(_current);
 
-            else
-            {
-                if (simulateTachy)
-                    HeartRate = SimulateCriticalChange(HeartRate, minHR, maxHR, +3);
-                else
-                    HeartRate = ChangeValue(HeartRate, minHR, maxHR);
-
-                if (simulateFever)
-                    Temperature = SimulateCriticalChange(Temperature, minTemp, maxTemp, +0.25);
-                else
-                    Temperature = ChangeValue(Temperature, minTemp, maxTemp);
-
-                if (simulateHypertonie)
-                    BloodPressure = SimulateCriticalChange(BloodPressure, minBP, maxBP, +2);
-                else
-                    BloodPressure = ChangeValue(BloodPressure, minBP, maxBP);
-
-                if (simualteBradypnoe)
-                    RespRate = SimulateCriticalChange(RespRate, minRR, maxRR, -0.25);
-                else
-                    RespRate = ChangeValue(RespRate, minRR, maxRR);
-
-                if (simulateHypoxia)
-                    SpO2 = SimulateCriticalChange(SpO2, minSpO2, maxSpO2, -1.5);
-                else
-                    SpO2 = ChangeValue(SpO2, minSpO2, maxSpO2);
-
-            }
-
+            // Graph updaten
             if (graphWindow != null && graphWindow.IsVisible)
-            {
                 graphWindow.UpdateValues(HeartRate, Temperature, BloodPressure, RespRate, SpO2);
-            }
 
+            // MQTT publish
             if (mqttPublisher != null && mqttPublisher.IsConnected)
             {
-                string id = StationID.Replace("Station ID:", "").Trim();
-                mqttPublisher.PublishVitalData(id, HeartRate, Temperature, BloodPressure, RespRate, SpO2);
+                string stationId = VitalSimulationEngine.ExtractStationId(StationID);
+                mqttPublisher.PublishVitalData(stationId, HeartRate, Temperature, BloodPressure, RespRate, SpO2);
             }
-
         }
 
-        private double ChangeValue(double value, double min, double max)
+        private void ApplyValuesToUi(VitalValues v)
         {
-            double range = max - min;
-            double delta = range * (ChangePercent / 100.0);
-
-            if (rnd.Next(2) == 0)
-                value += delta;
-            else
-                value -= delta;
-
-            if (value < min)
-                value = min;
-            if (value > max)
-                value = max;
-
-            return value;
+            HeartRate = v.HeartRate;
+            Temperature = v.Temperature;
+            BloodPressure = v.BloodPressure;
+            RespRate = v.RespRate;
+            SpO2 = v.SpO2;
         }
 
-        private double SimulateCriticalChange(double value, double min, double max, double step)
+
+        public string StationID
         {
-            value += step;
-            if (value < min)
-                value = min;
-            if (value > max)
-                value = max;
-            return value;
+            get { return _stationID; }
+            set { _stationID = value; OnPropertyChanged(nameof(StationID)); }
         }
 
-        private double MoveTowards(double current, double target, double fraction)
+        public double HeartRate
         {
-            double diff = target - current;
-            return current + diff * fraction;
+            get { return _heartRate; }
+            set { _heartRate = value; OnPropertyChanged(nameof(HeartRate)); }
         }
 
+        public double Temperature
+        {
+            get { return _temperature; }
+            set { _temperature = value; OnPropertyChanged(nameof(Temperature)); }
+        }
+
+        public double BloodPressure
+        {
+            get { return _bloodPressure; }
+            set { _bloodPressure = value; OnPropertyChanged(nameof(BloodPressure)); }
+        }
+
+        public double RespRate
+        {
+            get { return _respRate; }
+            set { _respRate = value; OnPropertyChanged(nameof(RespRate)); }
+        }
+
+        public double SpO2
+        {
+            get { return _spO2; }
+            set { _spO2 = value; OnPropertyChanged(nameof(SpO2)); }
+        }
+
+        public double ChangePercent
+        {
+            get { return _engine.ChangePercent; }
+            set { _engine.ChangePercent = value; OnPropertyChanged(nameof(ChangePercent)); }
+        }
+
+        public double UpdateIntervall
+        {
+            get { return _updateIntervall; }
+            set
+            {
+                _updateIntervall = value;
+                timer.Interval = TimeSpan.FromMilliseconds(_updateIntervall);
+                OnPropertyChanged(nameof(UpdateIntervall));
+            }
+        }
+
+
+        // ToggleSimulation (Start/Stop)
         private void ToggleSimulation(object sender, RoutedEventArgs e)
         {
             if (isRunning)
             {
                 timer.Stop();
                 isRunning = false;
+
+                // Simulationen stoppen
                 simulateFever = false;
                 simulateHypoxia = false;
                 simulateTachy = false;
                 simualteBradypnoe = false;
                 simulateHypertonie = false;
+
                 reset = false;
+                crit = false;
             }
             else
             {
@@ -227,18 +194,17 @@ namespace VitalDatenSim
                 isRunning = true;
             }
 
-            OnPropertyChanged(nameof(SimulationButtonText));
         }
 
-        private void ShowValues(object sender, EventArgs e)
+        private void ShowValues(object sender, RoutedEventArgs e)
         {
-            string msg = $"Station: {StationID}\n\n" +
-                         $"Heart Rate: {HeartRate:F1} bpm\n" +
-                         $"Temperature: {Temperature:F1} °C\n" +
-                         $"Blood Pressure: {BloodPressure:F1} mmHg\n" +
-                         $"Respiratory Rate: {RespRate:F1} breaths/min\n" +
-                         $"Oxygen Saturation: {SpO2:F1}%";
-
+            string msg =
+                "Station: " + StationID + "\n\n" +
+                "Heart Rate: " + HeartRate.ToString("F1") + " bpm\n" +
+                "Temperature: " + Temperature.ToString("F1") + " °C\n" +
+                "Blood Pressure: " + BloodPressure.ToString("F1") + " mmHg\n" +
+                "Respiratory Rate: " + RespRate.ToString("F1") + " breaths/min\n" +
+                "Oxygen Saturation: " + SpO2.ToString("F1") + "%";
 
             MessageBox.Show(msg, "Current Vital Parameters", MessageBoxButton.OK, MessageBoxImage.Information);
         }
@@ -261,11 +227,13 @@ namespace VitalDatenSim
             if (!isRunning)
                 return;
 
+            // Alles aus, dann Reset aktiv
             simulateFever = false;
             simulateHypoxia = false;
             simulateTachy = false;
             simualteBradypnoe = false;
             simulateHypertonie = false;
+
             crit = false;
             reset = true;
         }
@@ -282,6 +250,7 @@ namespace VitalDatenSim
                 simulateTachy = true;
                 simualteBradypnoe = true;
                 simulateHypertonie = true;
+
                 reset = false;
                 crit = true;
             }
@@ -292,10 +261,10 @@ namespace VitalDatenSim
                 simulateTachy = false;
                 simualteBradypnoe = false;
                 simulateHypertonie = false;
+
                 reset = false;
                 crit = false;
             }
-
         }
 
         private void SimulateTachycardia(object sender, RoutedEventArgs e)
@@ -303,10 +272,7 @@ namespace VitalDatenSim
             if (!timer.IsEnabled)
                 return;
 
-            if (!simulateTachy)
-                simulateTachy = true;
-            else
-                simulateTachy = false;
+            simulateTachy = !simulateTachy;
             crit = false;
         }
 
@@ -315,10 +281,7 @@ namespace VitalDatenSim
             if (!timer.IsEnabled)
                 return;
 
-            if (!simulateFever)
-                simulateFever = true;
-            else
-                simulateFever = false;
+            simulateFever = !simulateFever;
             crit = false;
         }
 
@@ -327,10 +290,7 @@ namespace VitalDatenSim
             if (!timer.IsEnabled)
                 return;
 
-            if (!simulateHypoxia)
-                simulateHypoxia = true;
-            else
-                simulateHypoxia = false;
+            simulateHypoxia = !simulateHypoxia;
             crit = false;
         }
 
@@ -339,10 +299,7 @@ namespace VitalDatenSim
             if (!timer.IsEnabled)
                 return;
 
-            if (!simulateHypertonie)
-                simulateHypertonie = true;
-            else
-                simulateHypertonie = false;
+            simulateHypertonie = !simulateHypertonie;
             crit = false;
         }
 
@@ -351,27 +308,27 @@ namespace VitalDatenSim
             if (!timer.IsEnabled)
                 return;
 
-            if (!simualteBradypnoe)
-                simualteBradypnoe = true;
-            else
-                simualteBradypnoe = false;
+            simualteBradypnoe = !simualteBradypnoe;
             crit = false;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-
         }
 
         protected override void OnClosed(EventArgs e)
         {
-
             base.OnClosed(e);
+
             if (mqttPublisher != null && mqttPublisher.IsConnected)
                 mqttPublisher.Disconnect();
+        }
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            var handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
