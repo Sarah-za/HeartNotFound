@@ -1,9 +1,13 @@
-﻿<Window x:Class="Remotmonitor.MainWindow"
+﻿<Window x:Class="Remotemonitor.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:m="clr-namespace:Remotmonitor.Models"
-        xmlns:local="clr-namespace:Remotmonitor.Converters"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:conv="clr-namespace:Remotemonitor.Converters"
+        xmlns:local="clr-namespace:Remotemonitor"
+        xmlns:m="clr-namespace:Remotemonitor"
         xmlns:media="clr-namespace:System.Windows.Media;assembly=PresentationCore"
+        mc:Ignorable="d"
         Title="Remote Monitor"
         Background="Black"
         FontFamily="Consolas"
@@ -16,8 +20,8 @@
 
     <!-- ===== Styles ===== -->
     <Window.Resources>
-        <local:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
-        <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <conv:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+        <conv:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <Style TargetType="GridViewColumnHeader">
             <Setter Property="Foreground" Value="Cyan"/>
             <Setter Property="FontWeight" Value="Bold"/>
