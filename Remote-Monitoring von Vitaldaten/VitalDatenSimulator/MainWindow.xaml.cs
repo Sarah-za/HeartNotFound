@@ -48,13 +48,10 @@ namespace VitalDatenSimulator
             DataContext = this;
 
             // Station-ID
-            InputDialog inputDialog = new InputDialog();
-            bool? result = inputDialog.ShowDialog();
-
-            if (result == true && !string.IsNullOrWhiteSpace(inputDialog.EnteredID))
-                StationID = "Station ID: " + inputDialog.EnteredID;
+            if (Application.Current.Properties.Contains("StationID"))
+                StationID = "Station ID: " + Application.Current.Properties["StationID"];
             else
-                StationID = "Station ID: " + new Random().Next(1000, 9999);
+                StationID = "Station ID: UNDEFINED";
 
             // MQTT (wie vorher)
             mqttPublisher = new VitalMqttPublisher();
