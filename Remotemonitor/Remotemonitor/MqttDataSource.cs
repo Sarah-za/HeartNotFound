@@ -6,15 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using System.Windows;
 
 namespace Remotemonitor
 {
     public class MqttDataSource : IDataSource
     {
-        private readonly string broker = "mqtt.inftech.hs-mannheim.de";
-        private readonly int port = 8883;
-        private readonly string username = "25pms02";
-        private readonly string password = "cf0fc303";
+        private readonly string broker;
+        private readonly int port;
+        private readonly string username;
+        private readonly string password;
 
         private readonly IMqttClient client;
         private readonly MqttFactory factory = new();
@@ -68,6 +69,12 @@ namespace Remotemonitor
         public MqttDataSource()
         {
             client = factory.CreateMqttClient();
+
+            // aus App.Properties (gesetzt im ConfigDialog)
+            broker = (string)(Application.Current.Properties["MQTT_BROKER"] ?? "");
+            port = (int)(Application.Current.Properties["MQTT_PORT"] ?? 0);
+            username = (string)(Application.Current.Properties["MQTT_USER"] ?? "");
+            password = (string)(Application.Current.Properties["MQTT_PASS"] ?? "");
         }
 
         public async Task StartAsync(CancellationToken ct)
@@ -94,11 +101,11 @@ namespace Remotemonitor
 
             client.ApplicationMessageReceivedAsync += OnMqttMessage;
 
-            await client.SubscribeAsync("25pms02/+/heartrate");
-            await client.SubscribeAsync("25pms02/+/temperature");
-            await client.SubscribeAsync("25pms02/+/bloodpressure");
-            await client.SubscribeAsync("25pms02/+/resprate");
-            await client.SubscribeAsync("25pms02/+/spo2");
+            await client.SubscribeAsync($"{username}/+/heartrate");
+            await client.SubscribeAsync($"{username}/+/temperature");
+            await client.SubscribeAsync($"{username}/+/bloodpressure");
+            await client.SubscribeAsync($"{username}/+/resprate");
+            await client.SubscribeAsync($"{username}/+/spo2");
 
             Console.WriteLine("[MQTT] Subscribed.");
 

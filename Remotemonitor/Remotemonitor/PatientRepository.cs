@@ -9,12 +9,22 @@ namespace Remotemonitor
 {
     public class PatientRepository
     {
-        private readonly string _connString =
-            "Host=db.inftech.hs-mannheim.de;" +
-            "Database=pms_hnf;" +
-            "Username=pms_hnf;" +
-            "Password=pms_hnf;" +
-            "SslMode=Require;Trust Server Certificate=true;";
+        private readonly string _connString;
+
+        public PatientRepository()
+        {
+            var server = (string)(System.Windows.Application.Current.Properties["DB_SERVER"] ?? "");
+            var db = (string)(System.Windows.Application.Current.Properties["DB_NAME"] ?? "");
+            var user = (string)(System.Windows.Application.Current.Properties["DB_USER"] ?? "");
+            var pass = (string)(System.Windows.Application.Current.Properties["DB_PASS"] ?? "");
+
+            _connString =
+                $"Host={server};" +
+                $"Database={db};" +
+                $"Username={user};" +
+                $"Password={pass};" +
+                "SslMode=Require;Trust Server Certificate=true;";
+        }
 
         public (string FirstName, string LastName, int Age, string Gender)? GetPatientByMonitorId(int moid)
         {
@@ -22,11 +32,11 @@ namespace Remotemonitor
             conn.Open();
 
             using var cmd = new NpgsqlCommand(@"
-        SELECT p.vorname, p.name, p.alter, p.geschlecht
-        FROM belegung b
-        JOIN patients p ON b.pid = p.pid
-        WHERE b.moid = @moid
-        LIMIT 1;", conn);
+            SELECT p.vorname, p.name, p.alter, p.geschlecht
+            FROM belegung b
+            JOIN patients p ON b.pid = p.pid
+            WHERE b.moid = @moid
+            LIMIT 1;", conn);
 
             cmd.Parameters.AddWithValue("@moid", moid);
 

@@ -34,14 +34,8 @@ namespace VitalDatenSimulator
         {
             InitializeComponent();
 
-             /// Automatisches Ausfüllen mqttt_config.txt für testen, damit es schneller geht
-            if (TryReadConfig(ConfigPath, out var cfg))
-            {
-                BrokerBox.Text = cfg.broker;
-                PortBox.Text = cfg.port.ToString();
-                UsernameBox.Text = cfg.username;
-                PasswordBox.Password = cfg.password;
-            }
+            // Automatisches Ausfüllen mqttt_config.txt für testen, damit es schneller geht
+            //if (TryReadConfig(ConfigPath, out var cfg)) {BrokerBox.Text = cfg.broker;PortBox.Text = cfg.port.ToString();UsernameBox.Text = cfg.username;PasswordBox.Password = cfg.password;}
             
         }
 
@@ -113,6 +107,37 @@ namespace VitalDatenSimulator
             EnteredID = string.Empty;
             DialogResult = false;
             Close();
+        }
+
+        private void LoadConfig_Click(object sender, RoutedEventArgs e)
+        {
+            string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mqtt_config.txt");
+
+            if (!System.IO.File.Exists(path))
+            {
+                MessageBox.Show(
+                    $"mqtt_config.txt nicht gefunden:\n{path}",
+                    "Config fehlt",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!TryReadConfig(path, out var cfg))
+            {
+                MessageBox.Show(
+                    "mqtt_config.txt konnte nicht gelesen werden (Format prüfen).",
+                    "Lesefehler",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            // Werte in die Felder einsetzen
+            BrokerBox.Text = cfg.broker;
+            PortBox.Text = cfg.port.ToString();
+            UsernameBox.Text = cfg.username;
+            PasswordBox.Password = cfg.password;
         }
 
         private void ShowConfig_Click(object sender, RoutedEventArgs e)

@@ -1,0 +1,4 @@
+server=db.inftech.hs-mannheim.de
+user=pms_hnf
+password=pms_hnf
+datenbank=pms_hnf

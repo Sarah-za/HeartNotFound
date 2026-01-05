@@ -1,0 +1,105 @@
+﻿<Window x:Class="Remotemonitor.ConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Konfiguration"
+        Height="430" Width="620"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="ToolWindow">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Bitte MQTT- und SQL-Konfiguration eingeben oder aus Datei laden:"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,12"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- MQTT -->
+            <GroupBox Grid.Column="0" Header="MQTT" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Broker:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <TextBox x:Name="MqttBrokerBox" Grid.Row="0" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Port:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <TextBox x:Name="MqttPortBox" Grid.Row="1" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Username:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <TextBox x:Name="MqttUserBox" Grid.Row="2" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Password:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <PasswordBox x:Name="MqttPassBox" Grid.Row="3" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <Button Grid.Row="4" Grid.ColumnSpan="2"
+                            Content="Load mqtt_config.txt"
+                            Height="30"
+                            Margin="0,6,0,0"
+                            Click="LoadMqtt_Click"/>
+                </Grid>
+            </GroupBox>
+
+            <!-- SQL -->
+            <GroupBox Grid.Column="2" Header="SQL" Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Server:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <TextBox x:Name="DbServerBox" Grid.Row="0" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Datenbank:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <TextBox x:Name="DbNameBox" Grid.Row="1" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="User:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <TextBox x:Name="DbUserBox" Grid.Row="2" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Password:" Margin="0,0,10,8" VerticalAlignment="Center"/>
+                    <PasswordBox x:Name="DbPassBox" Grid.Row="3" Grid.Column="1" Height="28" Margin="0,0,0,8"/>
+
+                    <Button Grid.Row="4" Grid.ColumnSpan="2"
+                            Content="Load dB_conifg.txt"
+                            Height="30"
+                            Margin="0,6,0,0"
+                            Click="LoadDb_Click"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="OK" Width="100" Margin="6,0" Click="Ok_Click"/>
+            <Button Content="Abbrechen" Width="100" Margin="6,0" Click="Cancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
+

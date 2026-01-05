@@ -1,0 +1,4 @@
+broker = "mqtt.inftech.hs-mannheim.de";
+port = 8883;
+username = "25pms02";
+password = "cf0fc303";

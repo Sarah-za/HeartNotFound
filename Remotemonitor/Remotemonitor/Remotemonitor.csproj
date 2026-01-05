@@ -14,4 +14,13 @@
     <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="dB_config.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="mqtt_config.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
