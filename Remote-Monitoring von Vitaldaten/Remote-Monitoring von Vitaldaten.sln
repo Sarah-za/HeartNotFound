@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalDatenSim", "VitalDatenSim\VitalDatenSim.csproj", "{60680B17-1E73-4B17-B95D-FA646ACB97F3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalSimulationTests.cs", "VitalSimulationTests.cs\VitalSimulationTests.cs.csproj", "{199FED52-E581-4FA7-8793-30757B2373C8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalDatenSimulator", "VitalDatenSimulator\VitalDatenSimulator.csproj", "{9F7CDB24-AB16-4B92-A724-F0B37B8660D3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VitalDatenSimulator.Tests", "VitalDatenSimulator.Tests\VitalDatenSimulator.Tests.csproj", "{2B44EA6D-128A-4333-A2C2-A3F974758C5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,18 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{60680B17-1E73-4B17-B95D-FA646ACB97F3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{199FED52-E581-4FA7-8793-30757B2373C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{199FED52-E581-4FA7-8793-30757B2373C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{199FED52-E581-4FA7-8793-30757B2373C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{199FED52-E581-4FA7-8793-30757B2373C8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9F7CDB24-AB16-4B92-A724-F0B37B8660D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9F7CDB24-AB16-4B92-A724-F0B37B8660D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F7CDB24-AB16-4B92-A724-F0B37B8660D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9F7CDB24-AB16-4B92-A724-F0B37B8660D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B44EA6D-128A-4333-A2C2-A3F974758C5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B44EA6D-128A-4333-A2C2-A3F974758C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B44EA6D-128A-4333-A2C2-A3F974758C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B44EA6D-128A-4333-A2C2-A3F974758C5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

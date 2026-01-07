@@ -30,13 +30,19 @@ namespace VitalDatenSimulator
         public double StdSpO2 { get; set; } = 98;
 
         // Reset
-        public double ResetFraction { get; set; } = 0.05;
 
-        // Reset-Step
-        public double HrEps { get; set; } = 0.5;
-        public double TempEps { get; set; } = 0.05;
-        public double BpEps { get; set; } = 0.5;
-        public double RrEps { get; set; } = 0.2;
-        public double SpO2Eps { get; set; } = 0.5;
+        // Diff zu Std Werte
+        public double Hrdiff { get; set; } = 1;
+        public double Tempdiff { get; set; } = 0.1;
+        public double Bpdiff { get; set; } = 1;
+        public double Rrdiff { get; set; } = 0.5;
+        public double SpO2diff { get; set; } = 0.5;
+
+        // Reset Step Size
+        public double ResetHrStep { get; set; } = 1.0;     // bpm pro Tick
+        public double ResetTempStep { get; set; } = 0.1;   // °C pro Tick
+        public double ResetBpStep { get; set; } = 1.0;     // mmHg pro Tick
+        public double ResetRrStep { get; set; } = 0.5;     // /min pro Tick
+        public double ResetSpO2Step { get; set; } = 1.0;   // % pro Tick
     }
 }

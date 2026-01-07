@@ -1,4 +1,4 @@
-﻿namespace VitalSimulationTests.cs
+﻿namespace VitalDatenSimulator.Tests
 {
     [TestClass]
     public sealed class Test1

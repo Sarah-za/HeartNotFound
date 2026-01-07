@@ -38,18 +38,18 @@ namespace VitalDatenSimulator
 
             if (flags.Reset)
             {
-                next.HeartRate = MoveTowards(next.HeartRate, _s.StdHR, _s.ResetFraction);
-                next.Temperature = MoveTowards(next.Temperature, _s.StdTemp, _s.ResetFraction);
-                next.BloodPressure = MoveTowards(next.BloodPressure, _s.StdBP, _s.ResetFraction);
-                next.RespRate = MoveTowards(next.RespRate, _s.StdRR, _s.ResetFraction);
-                next.SpO2 = MoveTowards(next.SpO2, _s.StdSpO2, _s.ResetFraction);
+                next.HeartRate = MoveTowardsStep(next.HeartRate, _s.StdHR, _s.ResetHrStep);
+                next.Temperature = MoveTowardsStep(next.Temperature, _s.StdTemp, _s.ResetTempStep);
+                next.BloodPressure = MoveTowardsStep(next.BloodPressure, _s.StdBP, _s.ResetBpStep);
+                next.RespRate = MoveTowardsStep(next.RespRate, _s.StdRR, _s.ResetRrStep);
+                next.SpO2 = MoveTowardsStep(next.SpO2, _s.StdSpO2, _s.ResetSpO2Step);
 
                 bool resetDone =
-                    Math.Abs(next.HeartRate - _s.StdHR) < _s.HrEps &&
-                    Math.Abs(next.Temperature - _s.StdTemp) < _s.TempEps &&
-                    Math.Abs(next.BloodPressure - _s.StdBP) < _s.BpEps &&
-                    Math.Abs(next.RespRate - _s.StdRR) < _s.RrEps &&
-                    Math.Abs(next.SpO2 - _s.StdSpO2) < _s.SpO2Eps;
+                    Math.Abs(next.HeartRate - _s.StdHR) < _s.Hrdiff &&
+                    Math.Abs(next.Temperature - _s.StdTemp) < _s.Tempdiff &&
+                    Math.Abs(next.BloodPressure - _s.StdBP) < _s.Bpdiff &&
+                    Math.Abs(next.RespRate - _s.StdRR) < _s.Rrdiff &&
+                    Math.Abs(next.SpO2 - _s.StdSpO2) < _s.SpO2diff;
 
                 return new SimulationStepResult
                 {
@@ -121,6 +121,15 @@ namespace VitalDatenSimulator
         {
             if (stationIdLabel == null) return "";
             return stationIdLabel.Replace("Station ID:", "").Trim();
+        }
+
+        public double MoveTowardsStep(double current, double target, double step)
+        {
+            double diff = target - current;
+            if (Math.Abs(diff) <= step)
+                return target;
+
+            return current + Math.Sign(diff) * step;
         }
     }
 }

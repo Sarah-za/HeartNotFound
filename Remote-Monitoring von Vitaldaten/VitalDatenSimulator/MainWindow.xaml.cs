@@ -11,13 +11,11 @@ namespace VitalDatenSimulator
         private GraphWindow graphWindow;
         private VitalMqttPublisher mqttPublisher;
 
-        // --- NEU: Testbare Simulation ---
         private readonly VitalSimulationSettings _settings = new VitalSimulationSettings();
         private readonly VitalSimulationEngine _engine;
         private readonly SimulationFlags _flags = new SimulationFlags();
         private VitalValues _current;
 
-        // --- UI / Binding Felder ---
         private string _stationID;
         private double _heartRate;
         private double _temperature;
@@ -36,6 +34,8 @@ namespace VitalDatenSimulator
 
         private bool reset;
         private bool crit;
+
+        private bool _isApplyingValues;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -105,11 +105,19 @@ namespace VitalDatenSimulator
 
         private void ApplyValuesToUi(VitalValues v)
         {
-            HeartRate = v.HeartRate;
-            Temperature = v.Temperature;
-            BloodPressure = v.BloodPressure;
-            RespRate = v.RespRate;
-            SpO2 = v.SpO2;
+            _isApplyingValues = true;
+            try
+            {
+                HeartRate = v.HeartRate;
+                Temperature = v.Temperature;
+                BloodPressure = v.BloodPressure;
+                RespRate = v.RespRate;
+                SpO2 = v.SpO2;
+            }
+            finally
+            {
+                _isApplyingValues = false;
+            }
         }
 
 
@@ -122,31 +130,84 @@ namespace VitalDatenSimulator
         public double HeartRate
         {
             get { return _heartRate; }
-            set { _heartRate = value; OnPropertyChanged(nameof(HeartRate)); }
+            set
+            {
+                _heartRate = value;
+
+                if (!_isApplyingValues && _current != null)
+                {
+                    _current.HeartRate = value;
+                    reset = false;
+                }
+
+                OnPropertyChanged(nameof(HeartRate));
+            }
         }
 
         public double Temperature
         {
             get { return _temperature; }
-            set { _temperature = value; OnPropertyChanged(nameof(Temperature)); }
+            set {
+                _temperature = value; 
+
+                if (!_isApplyingValues && _current != null)
+                {
+                    _current.Temperature = value;
+                    reset = false;
+                }
+
+                OnPropertyChanged(nameof(Temperature)); }
         }
 
         public double BloodPressure
         {
             get { return _bloodPressure; }
-            set { _bloodPressure = value; OnPropertyChanged(nameof(BloodPressure)); }
+            set
+            {
+                _bloodPressure = value;
+
+                if (!_isApplyingValues && _current != null)
+                {
+                    _current.BloodPressure = value;
+                    reset = false;
+                }
+
+                OnPropertyChanged(nameof(BloodPressure));
+            }
         }
 
         public double RespRate
         {
             get { return _respRate; }
-            set { _respRate = value; OnPropertyChanged(nameof(RespRate)); }
+            set
+            {
+                _respRate = value;
+
+                if (!_isApplyingValues && _current != null)
+                {
+                    _current.RespRate = value;
+                    reset = false;
+                }
+
+                OnPropertyChanged(nameof(RespRate));
+            }
         }
 
         public double SpO2
         {
             get { return _spO2; }
-            set { _spO2 = value; OnPropertyChanged(nameof(SpO2)); }
+            set
+            {
+                _spO2 = value;
+
+                if (!_isApplyingValues && _current != null)
+                {
+                    _current.SpO2 = value;
+                    reset = false;
+                }
+
+                OnPropertyChanged(nameof(SpO2));
+            }
         }
 
         public double ChangePercent
