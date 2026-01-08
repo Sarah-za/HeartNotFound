@@ -59,9 +59,9 @@ namespace Remotemonitor
 
             _info["HR"] = (Colors.Lime, 40, 160, Canvas_HR);
             _info["SpO2"] = (Colors.DeepSkyBlue, 80, 100, Canvas_SPO2);
-            _info["RR"] = (Colors.Gold, 5, 30, Canvas_RR);
-            _info["Temp"] = (Colors.White, 35, 43, Canvas_Temp);
-            _info["Sys"] = (Colors.Tomato, 80, 240, Canvas_BP);
+            _info["RR"] = (Colors.Gold, 6, 30, Canvas_RR);
+            _info["Temp"] = (Colors.White, 34, 43, Canvas_Temp);
+            _info["Sys"] = (Colors.Tomato, 70, 240, Canvas_BP);
 
             foreach (var kvp in _info)
             {
@@ -157,7 +157,7 @@ namespace Remotemonitor
 
                 case "SpO2":
                     DrawLimitLine(canvas, limits.Spo2WarningMin, min, max, Brushes.Orange);
-                    // ❗ obere SpO2-Warn-Grenze NICHT zeichnen
+                    // obere SpO2-Warn-Grenze NICHT zeichnen, da nicht über 100% gehen kann
                     break;
             }
 
@@ -186,7 +186,7 @@ namespace Remotemonitor
 
                 case "SpO2":
                     DrawLimitLine(canvas, limits.Spo2CriticalMin, min, max, Brushes.Red);
-                    // ❗ obere SpO2-Kritisch-Grenze NICHT zeichnen
+                    // obere SpO2-Kritisch-Grenze NICHT zeichnen, da nicht über 100% gehen kann
                     break;
             }
 
@@ -298,7 +298,7 @@ namespace Remotemonitor
                     StrokeThickness = 1
                 });
 
-                // Label (relativ!)
+                // Label
                 var lbl = new TextBlock
                 {
                     Text = $"{sec}s",
