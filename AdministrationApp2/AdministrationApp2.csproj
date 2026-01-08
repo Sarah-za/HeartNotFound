@@ -12,4 +12,10 @@
     <PackageReference Include="Npgsql" Version="10.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="db_config.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

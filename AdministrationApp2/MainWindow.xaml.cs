@@ -23,14 +23,23 @@ namespace AdministrationApp2
     public partial class MainWindow : Window
     {
         // 🔗 Verbindung zur PostgreSQL-Datenbank
-        private string connString =
-        "Host=db.inftech.hs-mannheim.de;Username=pms_hnf;Password=pms_hnf;Database=pms_hnf;SslMode=Require;Trust Server Certificate=true;";
+        private readonly string connString;
+
 
         public MainWindow()
         {
             InitializeComponent();
+
+            var server = (string)(Application.Current.Properties["DB_SERVER"] ?? "");
+            var db = (string)(Application.Current.Properties["DB_NAME"] ?? "");
+            var user = (string)(Application.Current.Properties["DB_USER"] ?? "");
+            var pass = (string)(Application.Current.Properties["DB_PASS"] ?? "");
+
+            connString = $"Host={server};Username={user};Password={pass};Database={db};SslMode=Require;Trust Server Certificate=true;";
+
             AktualisiereAnzeige();
         }
+
 
         // 🔄 Lädt Patienten und Monitore aus der DB
         private void AktualisiereAnzeige()

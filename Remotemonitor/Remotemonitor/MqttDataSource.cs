@@ -34,6 +34,7 @@ namespace Remotemonitor
         // PatientID → room / bed
         private readonly Dictionary<string, string> _room = new();
         private readonly Dictionary<string, int> _bed = new();
+        private readonly Dictionary<string, HashSet<int>> _occupiedBedsByRoom = new();
 
         // StationID → Buffer
         private readonly Dictionary<string, PartialVital> _buffer = new();
@@ -188,10 +189,8 @@ namespace Remotemonitor
                     }
                 }
 
-                // Zimmer / Bett (wie bisher)
-                string[] rooms = { "101", "102", "103", "104" };
-                _room[pid] = rooms[_rng.Next(rooms.Length)];
-                _bed[pid] = _rng.Next(1, 5);
+                AssignUniqueRoomBed(pid);
+
             }
 
             string patientId = _stationToPatient[stationId];
@@ -285,5 +284,43 @@ namespace Remotemonitor
             if (client != null && client.IsConnected)
                 await client.DisconnectAsync();
         }
+
+        private void AssignUniqueRoomBed(string patientId)
+        {
+            string[] rooms = { "101", "102", "103", "104" };
+            const int bedsPerRoom = 4;
+
+            var roomOrder = rooms.OrderBy(_ => _rng.Next()).ToArray();
+
+            foreach (var room in roomOrder)
+            {
+                if (!_occupiedBedsByRoom.TryGetValue(room, out var occ))
+                {
+                    occ = new HashSet<int>();
+                    _occupiedBedsByRoom[room] = occ;
+                }
+
+                // freie Betten in diesem Room sammeln
+                var freeBeds = Enumerable.Range(1, bedsPerRoom).Where(b => !occ.Contains(b)).ToList();
+                if (freeBeds.Count == 0)
+                    continue;
+
+                // zufällig eines der freien Betten wählen
+                int bed = freeBeds[_rng.Next(freeBeds.Count)];
+
+                // speichern
+                _room[patientId] = room;
+                _bed[patientId] = bed;
+
+                // als belegt markieren
+                occ.Add(bed);
+
+                return;
+            }
+
+            _room[patientId] = "FULL";
+            _bed[patientId] = 0;
+        }
+
     }
 }
