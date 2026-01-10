@@ -18,17 +18,15 @@ namespace VitalDatenSimulator.Tests
     {
         private static VitalSimulationSettings S() => new VitalSimulationSettings();
 
-        /// <summary>
-        /// SYS-SIM10:
-        /// - "typische Vitaldaten in realistischen Wertebereichen" => Werte bleiben immer in Min/Max
-        /// </summary>
+        // SIM10:
+        // typische Vitaldaten in realistischen Wertebereichen
         [TestMethod]
-        public void SYS_SIM10_VitalData_StaysWithinRealisticRanges_AndChangesPerTickWithinExpectedDelta()
+        public void SIM10_PlausibleVitalData_T9()
         {
             var s = S();
             var engine = new VitalSimulationEngine(s, rnd: new Random(12345)) { ChangePercent = 1.0 };
 
-            var flags = new SimulationFlags(); // alles false => normale Variation
+            var flags = new SimulationFlags();
 
             var cur = new VitalValues
             {
@@ -39,7 +37,6 @@ namespace VitalDatenSimulator.Tests
                 SpO2 = s.StdSpO2
             };
 
-            // erwartete max. Änderungsbeträge pro Tick 
             double dHr = (s.MaxHR - s.MinHR) * (engine.ChangePercent / 100.0);
             double dTemp = (s.MaxTemp - s.MinTemp) * (engine.ChangePercent / 100.0);
             double dBp = (s.MaxBP - s.MinBP) * (engine.ChangePercent / 100.0);
@@ -50,14 +47,12 @@ namespace VitalDatenSimulator.Tests
             {
                 var next = engine.Step(cur, flags).Values;
 
-                // Immer in realistischen Min/Max-Bereichen
                 AssertInRange(next.HeartRate, s.MinHR, s.MaxHR, "HeartRate out of range");
                 AssertInRange(next.Temperature, s.MinTemp, s.MaxTemp, "Temperature out of range");
                 AssertInRange(next.BloodPressure, s.MinBP, s.MaxBP, "BloodPressure out of range");
                 AssertInRange(next.RespRate, s.MinRR, s.MaxRR, "RespRate out of range");
                 AssertInRange(next.SpO2, s.MinSpO2, s.MaxSpO2, "SpO2 out of range");
 
-                // Pro Tick nur eine “typische” kleine Änderung
                 Assert.IsTrue(Math.Abs(next.HeartRate - cur.HeartRate) <= dHr + 1e-9, "HR delta too large");
                 Assert.IsTrue(Math.Abs(next.Temperature - cur.Temperature) <= dTemp + 1e-9, "Temp delta too large");
                 Assert.IsTrue(Math.Abs(next.BloodPressure - cur.BloodPressure) <= dBp + 1e-9, "BP delta too large");
@@ -68,16 +63,13 @@ namespace VitalDatenSimulator.Tests
             }
         }
 
-        /// <summary>
-        /// SYS-SIM20:
-        /// "Als Tester will ich die Vitaldaten sehen können"
-        /// </summary>
+        // SIM20:
+        // Als Tester will ich die Vitaldaten sehen können
         [TestMethod]
-        public void SYS_SIM20_GraphWindow_AllowsViewingVitals_ByStoringAndRenderingPoints()
+        public void SIM20_GraphWindow_T10()
         {
             Exception threadEx = null;
 
-            // Ergebnisse aus STA-Thread herausreichen
             int? heartCount = null;
             int? tempCount = null;
             int? bpCount = null;
@@ -102,7 +94,6 @@ namespace VitalDatenSimulator.Tests
 
                     w.Show();
 
-                    // Layout/Measure erzwingen, damit Canvas.ActualWidth/Height > 0 wird
                     w.Dispatcher.Invoke(() =>
                     {
                         w.UpdateLayout();
@@ -111,11 +102,11 @@ namespace VitalDatenSimulator.Tests
                         w.UpdateLayout();
                     });
 
-                    // 150 Updates => Window begrenzt auf MaxPoints=100 (laut Code)
+
                     for (int i = 0; i < 150; i++)
                         w.UpdateValues(80 + i % 3, 36.7 + (i % 2) * 0.1, 120 + i % 5, 16 + i % 2, 98 - (i % 4));
 
-                    // Reflection: private fields "data" und "lines" aus GraphWindow
+
                     var data = (IDictionary)GetPrivateField(w, "data");
                     var lines = (IDictionary)GetPrivateField(w, "lines");
 
@@ -125,24 +116,22 @@ namespace VitalDatenSimulator.Tests
                     rrCount = ((IList<double>)data["RespRate"]).Count;
                     spo2Count = ((IList<double>)data["SpO2"]).Count;
 
-                    // MaxPoints=100 => alle Listen sollten 100 sein
+ 
                     Assert.AreEqual(100, heartCount.Value);
                     Assert.AreEqual(100, tempCount.Value);
                     Assert.AreEqual(100, bpCount.Value);
                     Assert.AreEqual(100, rrCount.Value);
                     Assert.AreEqual(100, spo2Count.Value);
 
-                    // prüfen, ob Polyline Punkte hat und sinnvoll im Canvas liegt
                     var hrLine = (Polyline)lines["HeartRate"];
                     polyHrPoints = hrLine.Points.Count;
                     Assert.IsTrue(polyHrPoints.Value > 0);
 
-                    // Canvas_HeartRate per Name finden (liegt im XAML)
                     var canvas = (Canvas)w.FindName("Canvas_HeartRate");
                     double width = canvas.ActualWidth;
                     double height = canvas.ActualHeight;
 
-                    // Wenn Canvas Maße hat: Punkte müssen innerhalb sein (kleine Toleranz)
+
                     if (width > 0 && height > 0)
                     {
                         pointsWithinCanvas = hrLine.Points.All(p =>
@@ -152,7 +141,7 @@ namespace VitalDatenSimulator.Tests
                     }
                     else
                     {
-                        // Falls auf CI/Headless Layout nicht sauber: immerhin existieren Daten+Punkte.
+
                         pointsWithinCanvas = null;
                     }
 
@@ -177,15 +166,13 @@ namespace VitalDatenSimulator.Tests
             Assert.AreEqual(100, rrCount);
             Assert.AreEqual(100, spo2Count);
             Assert.IsTrue(polyHrPoints.HasValue && polyHrPoints.Value > 0);
-            // pointsWithinCanvas ist optional, je nach Layout/CI-Umgebung
+
         }
 
-        /// <summary>
-        /// SYS-SIM30:
-        /// "kritische Situationen simulieren"
-        /// </summary>
+        // SIM30:
+        // kritische Situationen simulieren
         [TestMethod]
-        public void SYS_SIM30_CriticalSituations_AllDefinedCriticalFlags_AreSimulatedWithMonotonicChange_AndClamping()
+        public void SIM30_CriticalSituations_T11()
         {
             var s = new VitalSimulationSettings();
             var engine = new VitalSimulationEngine(s, rnd: new Random(7));
@@ -281,7 +268,7 @@ namespace VitalDatenSimulator.Tests
         }
 
 
-        // --- helpers ---
+        // helpers
 
         private static void AssertInRange(double v, double min, double max, string msg)
         {
