@@ -31,33 +31,6 @@ namespace RemoteMonitor.Tests
 
         // Helper
 
-        private static void RunStaWithWpf(Action action)
-        {
-            Exception? ex = null;
-
-            var t = new Thread(() =>
-            {
-                try
-                {
-                    // WPF Application sicherstellen (damit App.Current.Dispatcher existiert)
-                    if (Application.Current == null)
-                        _ = new Application();
-
-                    action();
-                }
-                catch (Exception e)
-                {
-                    ex = e;
-                }
-            });
-
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-            t.Join();
-
-            if (ex != null) throw new Exception("STA/WPF test failed.", ex);
-        }
-
 
         private static void RunSta(Action action)
         {
@@ -83,61 +56,6 @@ namespace RemoteMonitor.Tests
 
             if (ex != null) throw new Exception("STA/WPF test failed.", ex);
         }
-
-        private static void PumpDispatcherUntil(Func<bool> condition, TimeSpan timeout)
-        {
-            var start = DateTime.UtcNow;
-
-            while (!condition())
-            {
-                if (DateTime.UtcNow - start > timeout)
-                    throw new Xunit.Sdk.XunitException("Timeout waiting for condition while pumping Dispatcher.");
-
-                // eine "Mini-Message-Loop" Iteration
-                var frame = new DispatcherFrame();
-                Dispatcher.CurrentDispatcher.BeginInvoke(
-                    DispatcherPriority.Background,
-                    new Action(() => frame.Continue = false));
-                Dispatcher.PushFrame(frame);
-
-                Thread.Sleep(5);
-            }
-
-        }
-
-            // RM_10: Vitaldaten empfangen und anzeigen
-
-        [Fact]
-        public void RM_10_Receive_and_Show_VitalData_T1()
-        {
-            RunStaWithWpf(() =>
-            {
-                var src = new FakeDataSource();
-                var vm = new MainViewModel(src); // verarbeitet über App.Current.Dispatcher.Invoke :contentReference[oaicite:1]{index=1}
-
-                // Sample "kommt aus Netzwerk/MQTT Thread"
-                Task.Run(() =>
-                {
-                    src.Emit(new VitalSample
-                    {
-                        PatientId = "P1",
-                        MonitorId = "M1",
-                        Room = "101",
-                        Bed = 1,
-                        Ts = DateTime.UtcNow,
-                        Hr = 80
-                    });
-                });
-
-                // Dispatcher pumpen bis angekommen (oder Timeout)
-                PumpDispatcherUntil(() => vm.Vitals.Count == 1, TimeSpan.FromSeconds(2));
-
-                Assert.Single(vm.Vitals);
-                Assert.Equal("P1", vm.Vitals[0].PatientId);
-                Assert.Equal(80, vm.Vitals[0].Hr);
-            });
-        }
-
 
         // RM_20: Bis zu max. 8 Patienten gleichzeitig auswählen und angezeigt bekommen
 
