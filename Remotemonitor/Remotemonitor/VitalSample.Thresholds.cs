@@ -18,7 +18,7 @@ namespace Remotemonitor
 
             // Kritisch: ≤ criticalMin oder ≥ criticalMax
             bool critical =
-                Spo2 <= t.Spo2CriticalMin || Spo2 >= t.Spo2CriticalMax ||
+                Spo2 <= t.Spo2CriticalMin ||
                 Hr <= t.HrCriticalMin || Hr >= t.HrCriticalMax ||
                 Rr <= t.RrCriticalMin || Rr >= t.RrCriticalMax ||
                 Temp <= t.TempCriticalMin || Temp >= t.TempCriticalMax ||
@@ -29,7 +29,7 @@ namespace Remotemonitor
 
             // Warnung: (zwischen critical und warning außerhalb der Normalzone)
             bool warning =
-                (Spo2 < t.Spo2WarningMin && Spo2 > t.Spo2CriticalMin) || (Spo2 > t.Spo2WarningMax && Spo2 < t.Spo2CriticalMax) ||
+                (Spo2 < t.Spo2WarningMin && Spo2 > t.Spo2CriticalMin) ||
                 (Hr < t.HrWarningMin && Hr > t.HrCriticalMin) || (Hr > t.HrWarningMax && Hr < t.HrCriticalMax) ||
                 (Rr < t.RrWarningMin && Rr > t.RrCriticalMin) || (Rr > t.RrWarningMax && Rr < t.RrCriticalMax) ||
                 (Temp < t.TempWarningMin && Temp > t.TempCriticalMin) || (Temp > t.TempWarningMax && Temp < t.TempCriticalMax) ||

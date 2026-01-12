@@ -321,5 +321,50 @@ namespace Remotemonitor
             OnPropertyChanged(nameof(BpAlarmForeground));
         }
 
+        public event Action? IdentityChanged;
+
+        public void ResetForNewPatient(
+            string newPatientId,
+            string firstName,
+            string lastName,
+            string gender,
+            int age,
+            string room,
+            int bed,
+            Threshold limits)
+        {
+            // Identität / Demographie
+            PatientId = newPatientId;
+            MonitorId = MonitorId; // bleibt gleich (Station)
+
+            FirstName = firstName;
+            LastName = lastName;
+
+            Gender = gender;
+            Age = age;
+
+            Room = room;
+            Bed = bed;
+
+            // Limits für den (neuen) Patienten
+            Limits = limits ?? new Threshold();
+
+            // Verlauf neu aufsetzen
+            History.Clear();
+            StalePulse = 0;
+
+            // sinnvolle Initialwerte
+            Ts = DateTime.UtcNow;
+
+            // UI informieren (Header/Title/Labels)
+            OnPropertyChanged(nameof(FullName));
+            OnPropertyChanged(nameof(DisplayName));
+            OnPropertyChanged(nameof(CardHeaderLine));
+            OnPropertyChanged(nameof(RoomBed));
+            OnPropertyChanged(nameof(AlarmColor));
+
+            IdentityChanged?.Invoke();
+        }
+
     }
 }

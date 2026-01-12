@@ -35,6 +35,17 @@ namespace Remotemonitor
             _patient = patient;
             Title = $"Verlauf: {_patient.DisplayName}";
 
+            _patient.IdentityChanged += () =>
+            {
+                // UI-Thread sicherstellen
+                Dispatcher.Invoke(() =>
+                {
+                    Title = $"Verlauf: {_patient.DisplayName}";
+                    UpdateHeader();
+                    DrawAll();
+                });
+            };
+
             _refreshTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(1)
@@ -50,12 +61,7 @@ namespace Remotemonitor
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            TxtName.Text = $"{_patient.PatientId} – {_patient.FirstName} {_patient.LastName}";
-            TxtRoom.Text = $"Zimmer/Bett: {_patient.RoomBed}";
-            TxtInfo.Text =
-                $"Alter: {_patient.Age} Jahre   " +
-                $"Geschlecht: {_patient.Gender.ToUpper()}   " +
-                $"Monitor: {_patient.MonitorId}";
+            UpdateHeader();
 
             _info["HR"] = (Colors.Lime, 40, 160, Canvas_HR);
             _info["SpO2"] = (Colors.DeepSkyBlue, 80, 100, Canvas_SPO2);
@@ -340,6 +346,16 @@ namespace Remotemonitor
                 StrokeDashArray = new DoubleCollection { 4, 4 },
                 Opacity = 0.9
             });
+        }
+
+        private void UpdateHeader()
+        {
+            TxtName.Text = $"{_patient.PatientId} – {_patient.FirstName} {_patient.LastName}";
+            TxtRoom.Text = $"Zimmer/Bett: {_patient.RoomBed}";
+            TxtInfo.Text =
+                $"Alter: {_patient.Age} Jahre   " +
+                $"Geschlecht: {_patient.Gender.ToUpper()}   " +
+                $"Monitor: {_patient.MonitorId}";
         }
 
 

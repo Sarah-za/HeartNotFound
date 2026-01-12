@@ -43,7 +43,7 @@ namespace Remotemonitor
         private readonly Dictionary<string, Threshold> _savedThresholds = new();
 
         // PatientID → VitalSample
-        private readonly Dictionary<string, VitalSample> _patients = new();
+        private readonly Dictionary<string, VitalSample> _stationSamples = new();
 
         // StationID → Name aus DB (Cache!)
         private readonly Dictionary<string, (string First, string Last)> _patientCache = new();
@@ -118,7 +118,7 @@ namespace Remotemonitor
 
             historyTimer.Tick += (_, __) =>
             {
-                foreach (var p in _patients.Values)
+                foreach (var p in _stationSamples.Values)
                 {
                     p.StalePulse++;
                     p.AddSnapshot();
@@ -152,44 +152,54 @@ namespace Remotemonitor
             // Patient-ID für Station vergeben (noch ohne Objekt-Erzeugung)
             if (!_stationToPatient.ContainsKey(stationId))
             {
-                // Neue interne Patient-ID erzeugen
-                string pid = $"P-{_nextPatientNr:0000}";
-                _nextPatientNr++;
-
-                _stationToPatient[stationId] = pid;
+                // Default: falls keine DB-Zuordnung existiert
+                string patientIdFromDbOrFallback = $"P-{_nextPatientNr:0000}";
 
                 // Monitor-ID (moid) aus stationId ableiten
-                // (stationId kommt bei dir als String, DB erwartet int moid)
                 if (!int.TryParse(stationId, out int moid))
                 {
                     // Fallback, falls stationId keine Zahl ist
                     _patientCache[stationId] = ("Unbekannt", "Patient");
-                    _demo[pid] = ("?", 0);
+                    _demo[patientIdFromDbOrFallback] = ("?", 0);
                 }
                 else
                 {
-                    // Patientendaten aus der DB laden
+                    // Patientendaten aus der DB laden (inkl. pid)
                     var dbPatient = _repo.GetPatientByMonitorId(moid);
 
                     if (dbPatient.HasValue)
                     {
-                        // Name cachen
+                        // PatientId aus DB: int pid -> in Format "P-0001"
+                        patientIdFromDbOrFallback = $"P-{dbPatient.Value.Pid:0000}";
+
+                        // Name 
                         _patientCache[stationId] =
                             (dbPatient.Value.FirstName, dbPatient.Value.LastName);
 
-                        // Alter & Geschlecht cachen
-                        _demo[pid] =
+                        // Alter & Geschlecht 
+                        _demo[patientIdFromDbOrFallback] =
                             (dbPatient.Value.Gender, dbPatient.Value.Age);
                     }
                     else
                     {
-                        // Kein Patient zugeordnet
                         _patientCache[stationId] = ("Unbekannt", "Patient");
-                        _demo[pid] = ("?", 0);
+                        _demo[patientIdFromDbOrFallback] = ("?", 0);
                     }
                 }
 
-                AssignUniqueRoomBed(pid);
+
+                if (!_demo.ContainsKey(patientIdFromDbOrFallback) ||
+                    (patientIdFromDbOrFallback.StartsWith("P-") && patientIdFromDbOrFallback == $"P-{_nextPatientNr:0000}"))
+                {
+                    
+                    _nextPatientNr++;
+                }
+
+                // Mapping setzen
+                _stationToPatient[stationId] = patientIdFromDbOrFallback;
+
+                // Zimmer/Bett vergeben (pro PatientId)
+                AssignUniqueRoomBed(patientIdFromDbOrFallback);
 
             }
 
@@ -228,14 +238,95 @@ namespace Remotemonitor
             if (!b.Complete)
                 return Task.CompletedTask;
 
-            // 🔹 VitalSample JETZT erzeugen
-            if (!_patients.ContainsKey(patientId))
-            {
-                var (gender2, age2) = _demo[patientId];
+            // ✅ 1Hz: Jetzt prüfen, ob an dieser Station noch derselbe Patient hängt
+            string currentPatientIdFromDb = EnsureCurrentPatientForStation(stationId);
 
-                var (firstName, lastName) = _patientCache.TryGetValue(stationId, out var n)
-                    ? n
-                    : ("Unbekannt", "Patient");
+            if (!_stationToPatient.TryGetValue(stationId, out var mappedPatientId))
+            {
+                mappedPatientId = currentPatientIdFromDb;
+                _stationToPatient[stationId] = mappedPatientId;
+            }
+
+            bool patientChanged = mappedPatientId != currentPatientIdFromDb;
+
+            if (patientChanged)
+            {
+                // alten Patienten "abmelden": Bett/Room freigeben (optional aber sinnvoll)
+                ReleaseRoomBed(mappedPatientId);
+
+                // neuen Patienten setzen
+                _stationToPatient[stationId] = currentPatientIdFromDb;
+
+                // DB-Daten neu laden (Name/Alter/Geschlecht)
+                string first = "Unbekannt";
+                string last = "Patient";
+                string gender = "?";
+                int age = 0;
+
+                if (int.TryParse(stationId, out int moid2))
+                {
+                    var dbP = _repo.GetPatientByMonitorId(moid2);
+                    if (dbP.HasValue)
+                    {
+                        first = dbP.Value.FirstName;
+                        last = dbP.Value.LastName;
+                        gender = dbP.Value.Gender;
+                        age = dbP.Value.Age;
+                    }
+                }
+
+                // Room/Bed für neuen Patienten
+                if (!_room.ContainsKey(currentPatientIdFromDb))
+                    AssignUniqueRoomBed(currentPatientIdFromDb);
+
+                // Thresholds für neuen Patienten
+                var limits = _savedThresholds.ContainsKey(currentPatientIdFromDb)
+                    ? _savedThresholds[currentPatientIdFromDb]
+                    : new Threshold();
+
+                // Wenn es schon ein Sample-Objekt für die Station gibt: RESET (HistoryWindow wird dadurch "neu")
+                if (_stationSamples.TryGetValue(stationId, out var existing))
+                {
+                    existing.ResetForNewPatient(
+                        currentPatientIdFromDb,
+                        first, last,
+                        gender, age,
+                        _room[currentPatientIdFromDb],
+                        _bed[currentPatientIdFromDb],
+                        limits);
+
+                    _savedThresholds[currentPatientIdFromDb] = existing.Limits;
+                }
+
+                // wenn es noch keins gibt, wird es unten normal erzeugt
+            }
+
+
+            // 🔹 VitalSample JETZT erzeugen
+            patientId = _stationToPatient[stationId];
+
+            if (!_stationSamples.ContainsKey(stationId))
+            {
+                // Name/Demo aus Cache oder DB (du kannst hier deinen bisherigen Cache-Code verwenden)
+                string firstName = "Unbekannt";
+                string lastName = "Patient";
+                string gender2 = "?";
+                int age2 = 0;
+
+                if (int.TryParse(stationId, out int moid))
+                {
+                    var dbPatient = _repo.GetPatientByMonitorId(moid);
+                    if (dbPatient.HasValue)
+                    {
+                        firstName = dbPatient.Value.FirstName;
+                        lastName = dbPatient.Value.LastName;
+                        gender2 = dbPatient.Value.Gender;
+                        age2 = dbPatient.Value.Age;
+                    }
+                }
+
+                if (!_room.ContainsKey(patientId))
+                    AssignUniqueRoomBed(patientId);
 
                 var sample = new VitalSample
                 {
@@ -250,32 +341,40 @@ namespace Remotemonitor
 
                     Room = _room[patientId],
                     Bed = _bed[patientId],
+
                     Ts = b.Ts.Value,
+
                     Limits = _savedThresholds.ContainsKey(patientId)
                         ? _savedThresholds[patientId]
                         : new Threshold()
                 };
 
-                _patients[patientId] = sample;
+                _stationSamples[stationId] = sample;
                 _savedThresholds[patientId] = sample.Limits;
-
-                Console.WriteLine($"[MQTT] Patient object created: {patientId} ({sample.FirstName} {sample.LastName}) for Monitor {stationId}");
             }
 
-            var vitals = _patients[patientId];
-            vitals.Ts = b.Ts.Value;
-            vitals.Hr = (int)b.Hr.Value;
-            vitals.Spo2 = (int)b.Spo2.Value;
-            vitals.Rr = (int)b.Rr.Value;
-            vitals.Temp = b.Temp.Value;
-            vitals.Sys = (int)b.Sys.Value;
-            vitals.Dia = vitals.Sys - 50;
+            var vitals = _stationSamples[stationId];
 
-            vitals.RecalculateEws();
+            // 🔹 Vitalwerte übernehmen (double → int sauber runden)
+            vitals.Ts = b.Ts!.Value;
 
+            vitals.Hr = (int)Math.Round(b.Hr!.Value);
+            vitals.Sys = (int)Math.Round(b.Sys!.Value);
+            vitals.Dia = Math.Max(0, vitals.Sys - 50);
+            vitals.Rr = (int)Math.Round(b.Rr!.Value);
+            vitals.Spo2 = (int)Math.Round(b.Spo2!.Value);
+
+            // Temperatur bleibt double
+            vitals.Temp = b.Temp!.Value;
+
+            vitals.StalePulse = 0;
+
+            // Buffer für nächste Sekunde zurücksetzen
+            _buffer[stationId] = new PartialVital();
+
+            // UI informieren
             OnSample?.Invoke(vitals);
 
-            _buffer[stationId] = new PartialVital();
             return Task.CompletedTask;
         }
 
@@ -320,6 +419,33 @@ namespace Remotemonitor
 
             _room[patientId] = "FULL";
             _bed[patientId] = 0;
+        }
+
+        private void ReleaseRoomBed(string patientId)
+        {
+            if (_room.TryGetValue(patientId, out var room) && _bed.TryGetValue(patientId, out var bed))
+            {
+                if (_occupiedBedsByRoom.TryGetValue(room, out var occ))
+                    occ.Remove(bed);
+            }
+
+            _room.Remove(patientId);
+            _bed.Remove(patientId);
+        }
+
+        private string EnsureCurrentPatientForStation(string stationId)
+        {
+            // Fallback
+            string fallbackPid = $"P-{_nextPatientNr:0000}";
+
+            if (!int.TryParse(stationId, out int moid))
+                return fallbackPid;
+
+            var dbPatient = _repo.GetPatientByMonitorId(moid);
+            if (!dbPatient.HasValue)
+                return fallbackPid;
+
+            return $"P-{dbPatient.Value.Pid:0000}";
         }
 
     }

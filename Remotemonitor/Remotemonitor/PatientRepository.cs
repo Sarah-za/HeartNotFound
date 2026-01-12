@@ -26,13 +26,13 @@ namespace Remotemonitor
                 "SslMode=Require;Trust Server Certificate=true;";
         }
 
-        public (string FirstName, string LastName, int Age, string Gender)? GetPatientByMonitorId(int moid)
+        public (int Pid, string FirstName, string LastName, int Age, string Gender)? GetPatientByMonitorId(int moid)
         {
             using var conn = new NpgsqlConnection(_connString);
             conn.Open();
 
             using var cmd = new NpgsqlCommand(@"
-            SELECT p.vorname, p.name, p.alter, p.geschlecht
+            SELECT p.pid, p.vorname, p.name, p.alter, p.geschlecht
             FROM belegung b
             JOIN patients p ON b.pid = p.pid
             WHERE b.moid = @moid
@@ -44,10 +44,11 @@ namespace Remotemonitor
             if (!r.Read()) return null;
 
             return (
-                r.GetString(0),
-                r.GetString(1),
-                r.GetInt32(2),
-                r.GetString(3)
+                r.GetInt32(0),  // pid
+                r.GetString(1), // vorname
+                r.GetString(2), // name
+                r.GetInt32(3),  // alter
+                r.GetString(4)  // geschlecht
             );
         }
 
