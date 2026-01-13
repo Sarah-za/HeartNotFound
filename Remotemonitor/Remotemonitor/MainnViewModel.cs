@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Remotemonitor
 {
@@ -173,5 +174,38 @@ namespace Remotemonitor
         {
             await _source.StartAsync(CancellationToken.None);
         }
+
+        [RelayCommand]
+        private void Discharge(VitalSample? patient)
+        {
+            if (patient is null)
+                return;
+
+            // Nur erlauben, wenn Status "Keine Daten" (IsStale == true)
+            if (!patient.IsStale)
+                return;
+
+            if (Selected.Contains(patient))
+                Selected.Remove(patient);
+
+            patient.IsActive = false;
+
+            // aus der Hauptliste entfernen
+            var existing = Vitals.FirstOrDefault(v => v.PatientId == patient.PatientId);
+            if (existing != null)
+                Vitals.Remove(existing);
+
+            // Rooms-Liste aufräumen
+            var room = patient.Room;
+            if (!string.IsNullOrWhiteSpace(room) && room != "FULL")
+            {
+                if (!Vitals.Any(v => v.Room == room) && Rooms.Contains(room))
+                    Rooms.Remove(room);
+
+                if (SelectedRoom == room && !Rooms.Contains(room))
+                    SelectedRoom = "Alle Zimmer";
+            }
+        }
+
     }
 }

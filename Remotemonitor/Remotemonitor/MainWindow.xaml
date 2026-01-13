@@ -13,7 +13,7 @@
         FontFamily="Consolas"
         FontSize="18"
         Foreground="Lime"
-        Height="800" Width="1430"
+        Height="800" Width="1555"
         Loaded="Window_Loaded"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True">
@@ -252,7 +252,6 @@
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
 
-                        <!-- Temp: FIX (war bei dir fälschlich RR) -->
                         <GridViewColumn Header="Temp (°C)" Width="90">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
@@ -288,14 +287,16 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-
+                        
+                        <!--Zeit-->
                         <GridViewColumn Header="Zeit (lokal)" Width="250">
                             <GridViewColumn.DisplayMemberBinding>
                                 <Binding Path="TsLocal" StringFormat="{}{0:HH:mm:ss dd.MM.yyyy}"/>
                             </GridViewColumn.DisplayMemberBinding>
                         </GridViewColumn>
-
-                        <GridViewColumn Header="Status" Width="180">
+                        
+                        <!--Status -->
+                        <GridViewColumn Header="Netzwerkstatus" Width="180">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Status}">
@@ -313,6 +314,41 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
+
+                        <!--Entlassem-->
+                        <GridViewColumn Header="Entlassen" Width="120">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Entlassen"
+                                            Padding="6,2"
+                                            Command="{Binding DataContext.DischargeCommand,
+                                                      RelativeSource={RelativeSource AncestorType=ListView}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding IsStale}">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <!-- Normal (entlassbar) -->
+                                                <Setter Property="Background" Value="#222"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                                <Setter Property="BorderBrush" Value="#555"/>
+                                                <Setter Property="Opacity" Value="1"/>
+
+                                                <Style.Triggers>
+                                                    <!-- NICHT entlassbar -->
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Background" Value="#2A2A2A"/>
+                                                        <Setter Property="Foreground" Value="#AAAAAA"/>
+                                                        <Setter Property="BorderBrush" Value="#444"/>
+                                                        <Setter Property="Opacity" Value="1"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+
                     </GridView>
                 </ListView.View>
             </ListView>
