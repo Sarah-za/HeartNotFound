@@ -1,6 +1,6 @@
 # HeartNotFound
 
-Remote-Monitoring-System zur Überwachung von Vitalparametern von Patienten. Entwickelt als studentisches Projekt im Rahmen der Vorlesung PMS (Technische Hochschule Mannheim, WS 2025).
+Remote-Monitoring-System zur Überwachung der Vitalparameter von Patienten. Entwickelt als studentisches Projekt im Rahmen der Vorlesung PMS (Technische Hochschule Mannheim, WS 2025).
 
 ## Über das Projekt
 
